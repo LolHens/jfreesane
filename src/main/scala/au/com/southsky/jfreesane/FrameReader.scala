@@ -7,10 +7,6 @@ import com.google.common.base.MoreObjects
 import com.google.common.io.ByteStreams
 import com.google.common.primitives.UnsignedInteger
 
-object FrameReader {
-  private val log: Logger = Logger.getLogger(classOf[FrameReader].getName)
-}
-
 /**
   * Represents a reader of {@link Frame frames}.
   */
@@ -110,4 +106,8 @@ class FrameReader(val device: SaneDevice, val parameters: SaneParameters, val un
   }
 
   override def toString: String = MoreObjects.toStringHelper(classOf[FrameReader]).add("isBigEndian", bigEndian).add("parameters", parameters).toString
+}
+
+object FrameReader {
+  private val log: Logger = Logger.getLogger(classOf[FrameReader].getName)
 }

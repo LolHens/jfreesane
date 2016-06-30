@@ -36,7 +36,7 @@ import com.google.common.io.ByteStreams;
  *
  * @author James Ring (sjr@jdns.org)
  */
-public class SaneOption {
+public class SaneOption2 {
 
   private final static Logger logger = Logger.getLogger(SaneOption.class.getName());
 
@@ -182,10 +182,6 @@ public class SaneOption {
     for (int i = 0; i <= length; i++) {
       SaneOption option = SaneOption.fromStream(inputStream, device, i);
 
-      if (option == null) {
-        continue;
-      }
-
       if (option.getValueType() == OptionValueType.GROUP) {
         device.addOptionGroup(option.getGroup());
       } else {
@@ -249,7 +245,7 @@ public class SaneOption {
       return 1;
     case INT:
     case FIXED:
-      return getSize() / SaneWord.SIZE_IN_BYTES;
+      return getSize() / SaneWord.SIZE_IN_BYTES();
     case BUTTON:
     case GROUP:
       throw new IllegalStateException("Option type '" + descriptor.getValueType()
