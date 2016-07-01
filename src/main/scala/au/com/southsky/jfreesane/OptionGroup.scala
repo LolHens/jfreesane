@@ -1,10 +1,9 @@
 package au.com.southsky.jfreesane
 
 import java.util
-import com.google.common.base.MoreObjects
-import com.google.common.base.Preconditions
-import com.google.common.collect.ImmutableList
-import com.google.common.collect.Lists
+
+import com.google.common.base.{MoreObjects, Preconditions}
+import com.google.common.collect.{ImmutableList, Lists}
 
 /**
   * Represents a group of options. The SANE backend may group options together. These may be handy

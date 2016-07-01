@@ -77,8 +77,8 @@ object SaneWord {
     *
     * @see SaneWord#fixedPrecisionValue
     */
-  val TO_FIXED_FUNCTION: Function[SaneWord, Double] = new Function[SaneWord, Double]() {
-    def apply(word: SaneWord): Double = {
+  val TO_FIXED_FUNCTION: Function[SaneWord, java.lang.Double] = new Function[SaneWord, java.lang.Double]() {
+    def apply(word: SaneWord): java.lang.Double = {
       return word.fixedPrecisionValue
     }
   }
