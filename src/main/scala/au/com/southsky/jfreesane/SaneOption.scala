@@ -212,7 +212,7 @@ class SaneOption private[jfreesane](val device: SaneDevice, val optionNumber: In
     out.write(SaneWord.forInt(elementCount))
 
     for (i <- 0 until getSize)
-      out.write(0);// why do we need to provide a value buffer in an RPC call ???
+      out.write(0); // why do we need to provide a value buffer in an RPC call ???
 
     //read result
     SaneOption.ControlOptionResult.fromSession(device.getSession)
@@ -272,7 +272,7 @@ class SaneOption private[jfreesane](val device: SaneDevice, val optionNumber: In
     val result = writeWordListOption(wordValues)
 
     val newValues: util.List[Double] = Lists.newArrayListWithCapacity(result.getValueSize / SaneWord.SIZE_IN_BYTES)
-    for ( i <- 0 until result.getValueSize by SaneWord.SIZE_IN_BYTES)
+    for (i <- 0 until result.getValueSize by SaneWord.SIZE_IN_BYTES)
       newValues.add(SaneWord.fromBytes(result.getValue, i).fixedPrecisionValue)
 
     newValues
@@ -355,18 +355,25 @@ class SaneOption private[jfreesane](val device: SaneDevice, val optionNumber: In
     out.write(SaneWord.forInt(optionNumber))
     out.write(SaneWord.forInt(SaneOption.OptionAction.SET_VALUE.getWireValue))
     out.write(getValueType)
+
     out.write(SaneWord.forInt(value.size * SaneWord.SIZE_IN_BYTES))
+
+    // Write the pointer to the words
     out.write(SaneWord.forInt(value.size))
+
+
     import scala.collection.JavaConversions._
-    for (element <- value) {
+    for (element <- value)
+    // and the words themselves
       out.write(element)
-    }
+
     val result: SaneOption.ControlOptionResult = handleWriteResponse
     if (result.getInfo.contains(SaneOption.OptionWriteInfo.RELOAD_OPTIONS) || result.getInfo.contains(SaneOption.OptionWriteInfo.RELOAD_PARAMETERS)) {
       device.invalidateOptions
       device.listOptions
     }
-    return result
+
+    result
   }
 
   @throws[IOException]
@@ -379,16 +386,19 @@ class SaneOption private[jfreesane](val device: SaneDevice, val optionNumber: In
     out.write(SaneWord.forInt(this.optionNumber))
     out.write(SaneWord.forInt(SaneOption.OptionAction.SET_VALUE.getWireValue))
     out.write(getValueType)
+
+    // even if the string is empty, we still write out at least 1 byte (null terminator)
     out.write(SaneWord.forInt(value.length + 1))
+
+    // write(String) takes care of writing the size for us
     out.write(value)
-    return handleWriteResponse
+
+    handleWriteResponse
   }
 
   @throws[IOException]
   @throws[SaneException]
-  private def writeOption(word: SaneWord): SaneOption.ControlOptionResult = {
-    return writeWordListOption(ImmutableList.of(word))
-  }
+  private def writeOption(word: SaneWord): SaneOption.ControlOptionResult = writeWordListOption(ImmutableList.of(word))
 
   @throws[IOException]
   @throws[SaneException]
@@ -396,6 +406,7 @@ class SaneOption private[jfreesane](val device: SaneDevice, val optionNumber: In
     Preconditions.checkState(isActive, "option %s is not active", getName)
     Preconditions.checkState(isWriteable, "option %s is not writeable", getName)
     Preconditions.checkState(getValueType eq OptionValueType.INT, "option %s is %s-typed, you must use the corresponding methods to set the value", getName, getValueType)
+
     val out: SaneOutputStream = device.getSession.getOutputStream
     out.write(SaneRpcCode.SANE_NET_CONTROL_OPTION)
     out.write(device.getHandle.getHandle)
@@ -404,17 +415,19 @@ class SaneOption private[jfreesane](val device: SaneDevice, val optionNumber: In
     out.write(getValueType)
     out.write(SaneWord.forInt(getSize))
     out.write(SaneWord.forInt(value.size))
+
     import scala.collection.JavaConversions._
-    for (element <- value) {
+    for (element <- value)
       out.write(SaneWord.forInt(element))
-    }
-    return handleWriteResponse
+
+    handleWriteResponse
   }
 
   @throws[IOException]
   @throws[SaneException]
   private def writeButtonOption: SaneOption.ControlOptionResult = {
     Preconditions.checkState(getValueType eq OptionValueType.BUTTON)
+
     val out: SaneOutputStream = device.getSession.getOutputStream
     out.write(SaneRpcCode.SANE_NET_CONTROL_OPTION)
     out.write(device.getHandle.getHandle)
@@ -422,31 +435,27 @@ class SaneOption private[jfreesane](val device: SaneDevice, val optionNumber: In
     out.write(SaneOption.OptionAction.SET_VALUE)
     out.write(getValueType)
     out.write(SaneWord.forInt(0))
-    out.write(SaneWord.forInt(0))
-    return handleWriteResponse
+    out.write(SaneWord.forInt(0)) // only one value follows
+
+    handleWriteResponse
   }
 
   @throws[IOException]
   @throws[SaneException]
   private def handleWriteResponse: SaneOption.ControlOptionResult = {
     val result: SaneOption.ControlOptionResult = SaneOption.ControlOptionResult.fromSession(device.getSession)
-    if (result.getInfo.contains(SaneOption.OptionWriteInfo.RELOAD_OPTIONS)) {
+
+    if (result.getInfo.contains(SaneOption.OptionWriteInfo.RELOAD_OPTIONS))
       device.invalidateOptions
-    }
-    return result
+
+    result
   }
 
-  def isActive: Boolean = {
-    return !descriptor.getOptionCapabilities.contains(OptionCapability.INACTIVE)
-  }
+  def isActive: Boolean = !descriptor.getOptionCapabilities.contains(OptionCapability.INACTIVE)
 
-  def isReadable: Boolean = {
-    return descriptor.getOptionCapabilities.contains(OptionCapability.SOFT_DETECT)
-  }
+  def isReadable: Boolean = descriptor.getOptionCapabilities.contains(OptionCapability.SOFT_DETECT)
 
-  def isWriteable: Boolean = {
-    return descriptor.getOptionCapabilities.contains(OptionCapability.SOFT_SELECT)
-  }
+  def isWriteable: Boolean = descriptor.getOptionCapabilities.contains(OptionCapability.SOFT_SELECT)
 }
 
 object SaneOption {
@@ -584,53 +593,6 @@ object SaneOption {
   @throws[IOException]
   private def fromStream(inputStream: SaneInputStream, device: SaneDevice, optionNumber: Int) = new SaneOption(device, optionNumber, inputStream.readOptionDescriptor)
 
-  object ControlOptionResult {
-    @throws[IOException]
-    @throws[SaneException]
-    def fromSession(session: SaneSession): SaneOption.ControlOptionResult = {
-      val stream: SaneInputStream = session.getInputStream
-      var status: SaneWord = stream.readWord
-      if (status.integerValue != 0) {
-        throw SaneException.fromStatusWord(status)
-      }
-      var info: Int = stream.readWord.integerValue
-      var `type`: OptionValueType = SaneEnums.valueOf(classOf[OptionValueType], stream.readWord.integerValue)
-      var valueSize: Int = stream.readWord.integerValue
-      var pointer: Int = stream.readWord.integerValue
-      var value: Array[Byte] = null
-      if (pointer == 0) {
-      }
-      else {
-        value = new Array[Byte](valueSize)
-        if (ByteStreams.read(stream, value, 0, valueSize) != valueSize) {
-          throw new IOException("truncated read while getting value")
-        }
-      }
-      val resource: String = stream.readString
-      if (!resource.isEmpty) {
-        session.authorize(resource)
-        status = stream.readWord
-        if (status.integerValue != 0) {
-          throw SaneException.fromStatusWord(status)
-        }
-        info = stream.readWord.integerValue
-        `type` = SaneEnums.valueOf(classOf[OptionValueType], stream.readWord.integerValue)
-        valueSize = stream.readWord.integerValue
-        pointer = stream.readWord.integerValue
-        value = null
-        if (pointer == 0) {
-        }
-        else {
-          value = new Array[Byte](valueSize)
-          if (stream.read(value) != valueSize) {
-            throw new IOException("truncated read while getting value")
-          }
-        }
-      }
-      new SaneOption.ControlOptionResult(status.integerValue, info, `type`, valueSize, value, resource)
-    }
-  }
-
   private class ControlOptionResult private(val status: Int,
                                             val _info: Int,
                                             val `type`: OptionValueType,
@@ -650,6 +612,70 @@ object SaneOption {
     def getValue: Array[Byte] = value
 
     def getResource: String = resource
+  }
+
+  object ControlOptionResult {
+    @throws[IOException]
+    @throws[SaneException]
+    def fromSession(session: SaneSession): SaneOption.ControlOptionResult = {
+      val stream: SaneInputStream = session.getInputStream
+
+      var status: SaneWord = stream.readWord
+
+      if (status.integerValue != 0)
+        throw SaneException.fromStatusWord(status)
+
+      var info: Int = stream.readWord.integerValue
+
+      var `type`: OptionValueType = SaneEnums.valueOf(classOf[OptionValueType], stream.readWord.integerValue)
+
+      var valueSize: Int = stream.readWord.integerValue
+
+      // read the pointer
+      var pointer: Int = stream.readWord.integerValue
+      var value: Array[Byte] =
+        if (pointer == 0)
+          null
+        else {
+          val value = new Array[Byte](valueSize)
+
+          if (ByteStreams.read(stream, value, 0, valueSize) != valueSize)
+            throw new IOException("truncated read while getting value")
+          else
+            value
+        }
+
+      val resource: String = stream.readString
+      if (!resource.isEmpty) {
+        session.authorize(resource)
+        status = stream.readWord
+
+        if (status.integerValue != 0)
+          throw SaneException.fromStatusWord(status)
+
+        info = stream.readWord.integerValue
+
+        `type` = SaneEnums.valueOf(classOf[OptionValueType], stream.readWord.integerValue)
+
+        valueSize = stream.readWord.integerValue
+
+        // read the pointer
+        pointer = stream.readWord.integerValue
+        value =
+          if (pointer == 0)
+            null
+          else {
+            val value = new Array[Byte](valueSize)
+
+            if (stream.read(value) != valueSize)
+              throw new IOException("truncated read while getting value")
+            else
+              value
+          }
+      }
+
+      new SaneOption.ControlOptionResult(status.integerValue, info, `type`, valueSize, value, resource)
+    }
   }
 
 }
