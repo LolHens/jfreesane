@@ -276,7 +276,7 @@ public class SaneSession implements Closeable {
     inputStream.readWord();
   }
 
-  private void initSane() throws IOException {
+  void initSane() throws IOException {
     // RPC code
     outputStream.write(SaneRpcCode.SANE_NET_INIT);
 
