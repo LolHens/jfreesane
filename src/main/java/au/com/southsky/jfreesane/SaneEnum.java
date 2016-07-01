@@ -13,4 +13,6 @@ interface SaneEnum {
    * the wire.
    */
   int getWireValue();
+
+  // def values: List[SaneEnum]
 }

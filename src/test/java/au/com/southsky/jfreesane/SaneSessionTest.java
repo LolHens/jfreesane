@@ -191,7 +191,7 @@ public class SaneSessionTest {
       try {
         device.acquireImage();
       } catch (SaneException e) {
-        if (e.getStatus() == SaneStatus.STATUS_NO_DOCS) {
+        if (e.getStatus() == SaneStatus.tmp_STATUS_NO_DOCS()) {
           // out of documents to read, that's fine
           break;
         } else {
@@ -214,7 +214,7 @@ public class SaneSessionTest {
       try {
         device.acquireImage();
       } catch (SaneException e) {
-        if (e.getStatus() == SaneStatus.STATUS_NO_DOCS) {
+        if (e.getStatus() == SaneStatus.tmp_STATUS_NO_DOCS()) {
           // out of documents to read, that's fine
           thrown = true;
         } else {
@@ -586,7 +586,7 @@ public class SaneSessionTest {
       device.open();
       fail("Expected a SaneException, didn't get one");
     } catch (SaneException e) {
-      if (e.getStatus() != SaneStatus.STATUS_ACCESS_DENIED) {
+      if (e.getStatus() != SaneStatus.tmp_STATUS_ACCESS_DENIED()) {
         throw e;
       }
 

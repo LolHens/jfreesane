@@ -526,7 +526,7 @@ object SaneOption {
     * Represents the information that the SANE daemon returns about the effect of modifying an
     * option.
     */
-  class OptionWriteInfo(name: String, ordinal: Int, val wireValue: Int) extends Enum[OptionWriteInfo](name, ordinal) with SaneEnum {
+  sealed class OptionWriteInfo(name: String, ordinal: Int, val wireValue: Int) extends Enum[OptionWriteInfo](name, ordinal) with SaneEnum {
     override def getWireValue: Int = wireValue
   }
 
