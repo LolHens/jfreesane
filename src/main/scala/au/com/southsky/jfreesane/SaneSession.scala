@@ -5,6 +5,7 @@ import java.io.{BufferedInputStream, Closeable, IOException}
 import java.net.{InetAddress, InetSocketAddress, Socket}
 import java.util.concurrent.TimeUnit
 import java.util.logging.{Level, Logger}
+import java.util
 
 import com.google.common.base.Preconditions
 
@@ -296,11 +297,11 @@ object SaneSession {
   @throws[IOException]
   def withRemoteSane(saneAddress: InetAddress, port: Int, timeout: Long, timeUnit: TimeUnit): SaneSession = {
     val millis: Long = timeUnit.toMillis(timeout)
-    Preconditions.checkArgument(millis >= 0 && millis <= Integer.MAX_VALUE, "Timeout must be between 0 and Integer.MAX_VALUE milliseconds")
+    Preconditions.checkArgument(millis >= 0 && millis <= Integer.MAX_VALUE, "Timeout must be between 0 and Integer.MAX_VALUE milliseconds": Object)
 
     // If the user specifies a non-zero timeout that rounds to 0 milliseconds, set the timeout to 1 millisecond instead.
     if (timeout > 0 && millis == 0)
-      Logger.getLogger(classOf[SaneSession].getName).log(Level.WARNING, "Specified timeout of {0} {1} rounds to 0ms and was clamped to 1ms", Array[AnyRef](timeout, timeUnit))
+      Logger.getLogger(classOf[SaneSession].getName).log(Level.WARNING, "Specified timeout of {0} {1} rounds to 0ms and was clamped to 1ms", Array(timeout, timeUnit))
 
     val socket: Socket = new Socket
     socket.setTcpNoDelay(true)
