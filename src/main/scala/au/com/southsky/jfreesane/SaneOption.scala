@@ -5,7 +5,6 @@ import java.nio.charset.Charset
 import java.util
 import java.util.logging.Logger
 
-import au.com.southsky.jfreesane.SaneOption2.OptionUnits
 import com.google.common.base.{Charsets, Function, Preconditions, Strings}
 import com.google.common.collect.{ImmutableList, Lists, Sets}
 import com.google.common.io.ByteStreams
@@ -83,42 +82,71 @@ class SaneOption private[jfreesane](val device: SaneDevice, val optionNumber: In
 
   private def getValueType: OptionValueType = descriptor.getValueType
 
+  /**
+    * Reads the current boolean value option. This option must be of type
+    * {@link OptionValueType#BOOLEAN}.
+    *
+    * @throws IOException
+    * if a problem occurred while talking to SANE
+    */
   @throws[IOException]
   @throws[SaneException]
   def getBooleanValue: Boolean = {
     Preconditions.checkState(getValueType eq OptionValueType.BOOLEAN, "option is not a boolean")
     Preconditions.checkState(getValueCount == 1, "option is a boolean array, not boolean")
+
     val result: SaneOption.ControlOptionResult = readOption
     SaneWord.fromBytes(result.getValue).integerValue != 0
   }
 
+  /**
+    * Reads the current Integer value option. We do not cache value from previous get or set
+    * operations so each get involves a round trip to the server.
+    *
+    * TODO: consider caching the returned value for "fast read" later
+    *
+    * @return the value of the option
+    * @throws IOException
+    * if a problem occurred while talking to SANE
+    */
   @throws[IOException]
   @throws[SaneException]
   def getIntegerValue: Int = {
+    // check for type agreement
     Preconditions.checkState(getValueType eq OptionValueType.INT, "option is not an integer")
     Preconditions.checkState(getValueCount == 1, "option is an integer array, not integer")
+
+    // Send RCP corresponding to:
+    // SANE_Status sane_control_option (SANE_Handle h, SANE_Int n, SANE_Action a, void *v, SANE_Int * i);
+
     val result: SaneOption.ControlOptionResult = readOption
     Preconditions.checkState(result.getType eq OptionValueType.INT)
     Preconditions.checkState(result.getValueSize == SaneWord.SIZE_IN_BYTES, "unexpected value size " + result.getValueSize + ", expecting " + SaneWord.SIZE_IN_BYTES)
-    SaneWord.fromBytes(result.getValue).integerValue
+
+    // TODO: handle resource authorisation
+    // TODO: check status -- may have to reload options!!
+    SaneWord.fromBytes(result.getValue).integerValue // the value
   }
 
   @throws[IOException]
   @throws[SaneException]
-  def getIntegerArrayValue: util.List[Integer] = {
+  def getIntegerArrayValue: util.List[Int] = {
     val result: SaneOption.ControlOptionResult = readOption
     Preconditions.checkState(result.getType eq OptionValueType.INT)
-    val values: util.List[Integer] = Lists.newArrayList()
-    var i: Int = 0
-    while (i < result.getValueSize) {
-      {
-        values.add(SaneWord.fromBytes(result.getValue, i).integerValue)
-      }
-      i += SaneWord.SIZE_IN_BYTES
-    }
+
+    val values = Lists.newArrayList[Int]()
+    for (i <- 0 until result.getValueSize by SaneWord.SIZE_IN_BYTES)
+      values.add(SaneWord.fromBytes(result.getValue, i).integerValue)
+
     values
   }
 
+  /**
+    * Returns the value of this option interpreted as a LATIN-1 (SANE's default encoding)
+    * encoded string.
+    *
+    * @throws IOException if a problem occurs reading the value from the SANE backend
+    */
   @throws[IOException]
   @throws[SaneException]
   def getStringValue: String = getStringValue(Charsets.ISO_8859_1)
@@ -127,23 +155,18 @@ class SaneOption private[jfreesane](val device: SaneDevice, val optionNumber: In
   @throws[SaneException]
   def getStringValue(encoding: Charset): String = {
     Preconditions.checkState(getValueType eq OptionValueType.STRING, "option is not a string")
+
     val result: SaneOption.ControlOptionResult = readOption
-    val value: Array[Byte] = result.getValue
-    var length: Int = 0
-    length = 0
-    while (length < value.length && value(length) != 0) {
-      ({
-        length += 1;
-        length - 1
-      })
-    }
-    new String(result.getValue, 0, length, encoding)
+    val value: Array[Byte] = result.getValue.takeWhile(_ != 0)
+
+    new String(value, 0, value.length, encoding)
   }
 
   @throws[IOException]
   @throws[SaneException]
   def getFixedValue: Double = {
     Preconditions.checkState(getValueType eq OptionValueType.FIXED, "option is not of fixed precision type")
+
     val result: SaneOption.ControlOptionResult = readOption
     SaneWord.fromBytes(result.getValue).fixedPrecisionValue
   }
@@ -153,60 +176,62 @@ class SaneOption private[jfreesane](val device: SaneDevice, val optionNumber: In
   def getFixedArrayValue: util.List[Double] = {
     val result: SaneOption.ControlOptionResult = readOption
     Preconditions.checkState(result.getType eq OptionValueType.FIXED)
-    val values: util.List[Double] = Lists.newArrayList()
-    var i: Int = 0
-    while (i < result.getValueSize) {
-      {
-        values.add(SaneWord.fromBytes(result.getValue, i).fixedPrecisionValue)
-      }
-      i += SaneWord.SIZE_IN_BYTES
-    }
+
+    val values = Lists.newArrayList[Double]()
+    for (i <- 0 until result.getValueSize by SaneWord.SIZE_IN_BYTES)
+      values.add(SaneWord.fromBytes(result.getValue, i).fixedPrecisionValue)
+
     values
   }
 
   @throws[IOException]
   @throws[SaneException]
   private def readOption: SaneOption.ControlOptionResult = {
+    // check that this option is readable
     Preconditions.checkState(isReadable, "option is not readable")
     Preconditions.checkState(isActive, "option is not active")
+
     val out: SaneOutputStream = device.getSession.getOutputStream
     out.write(SaneRpcCode.SANE_NET_CONTROL_OPTION)
     out.write(device.getHandle.getHandle)
     out.write(SaneWord.forInt(optionNumber))
     out.write(SaneOption.OptionAction.GET_VALUE)
+
     out.write(getValueType)
     out.write(SaneWord.forInt(getSize))
-    var elementCount: Int = 0
-    getValueType match {
+
+    val elementCount: Int = getValueType match {
       case OptionValueType.BOOLEAN | OptionValueType.FIXED | OptionValueType.INT =>
-        elementCount = getSize / SaneWord.SIZE_IN_BYTES
+        getSize / SaneWord.SIZE_IN_BYTES
       case OptionValueType.STRING =>
-        elementCount = getSize
+        getSize
       case _ =>
         throw new IllegalStateException("Unsupported type " + getValueType)
     }
+
     out.write(SaneWord.forInt(elementCount))
-    var i: Int = 0
-    while (i < getSize) {
-      {
-        out.write(0)
-      }
-      ({
-        i += 1;
-        i - 1
-      })
-    }
-    val result: SaneOption.ControlOptionResult = SaneOption.ControlOptionResult.fromSession(device.getSession)
-    return result
+
+    for (i <- 0 until getSize)
+      out.write(0);// why do we need to provide a value buffer in an RPC call ???
+
+    //read result
+    SaneOption.ControlOptionResult.fromSession(device.getSession)
   }
 
+  /**
+    * Sets the value of the current option to the supplied boolean value. Option value must be of
+    * boolean type. SANE may ignore your preference, so if you need to ensure the value has been set
+    * correctly, you should examine the return value of this method.
+    *
+    * @return the value that the option now has according to SANE
+    */
   @throws[IOException]
   @throws[SaneException]
   def setBooleanValue(value: Boolean): Boolean = {
-    val result: SaneOption.ControlOptionResult = writeOption(SaneWord.forInt(if (value) 1
-    else 0))
+    val result: SaneOption.ControlOptionResult = writeOption(SaneWord.forInt(if (value) 1 else 0))
     Preconditions.checkState(result.getType eq OptionValueType.BOOLEAN)
-    return SaneWord.fromBytes(result.getValue).integerValue != 0
+
+    SaneWord.fromBytes(result.getValue).integerValue != 0
   }
 
   @throws[IOException]
@@ -215,6 +240,10 @@ class SaneOption private[jfreesane](val device: SaneDevice, val optionNumber: In
     writeButtonOption
   }
 
+  /**
+    * Sets the value of the current option to the supplied fixed-precision value. Option value must
+    * be of fixed-precision type.
+    */
   @throws[IOException]
   @throws[SaneException]
   def setFixedValue(value: Double): Double = {
@@ -222,52 +251,82 @@ class SaneOption private[jfreesane](val device: SaneDevice, val optionNumber: In
     val wordValue: SaneWord = SaneWord.forFixedPrecision(value)
     val result: SaneOption.ControlOptionResult = writeOption(wordValue)
     Preconditions.checkState(result.getType eq OptionValueType.FIXED, "setFixedValue is not appropriate for option of type " + result.getType)
-    return SaneWord.fromBytes(result.getValue).fixedPrecisionValue
+
+    SaneWord.fromBytes(result.getValue).fixedPrecisionValue
   }
 
+  /**
+    * Sets the value of the current option to the supplied list of fixed-precision values. Option
+    * value must be of fixed-precision type and {@link #getValueCount} must be more than 1.
+    */
   @throws[IOException]
   @throws[SaneException]
   def setFixedValue(value: util.List[Double]): util.List[Double] = {
     val wordValues: util.List[SaneWord] = Lists.transform(value, new Function[Double, SaneWord]() {
       def apply(input: Double): SaneWord = {
         Preconditions.checkArgument(input >= -32768 && input <= 32767.9999, "value " + input + " is out of range")
-        return SaneWord.forFixedPrecision(input)
+        SaneWord.forFixedPrecision(input)
       }
     })
-    val result: SaneOption.ControlOptionResult = writeWordListOption(wordValues)
+
+    val result = writeWordListOption(wordValues)
+
     val newValues: util.List[Double] = Lists.newArrayListWithCapacity(result.getValueSize / SaneWord.SIZE_IN_BYTES)
-    var i: Int = 0
-    while (i < result.getValueSize) {
-      {
-        newValues.add(SaneWord.fromBytes(result.getValue, i).fixedPrecisionValue)
-      }
-      i += SaneWord.SIZE_IN_BYTES
-    }
-    return newValues
+    for ( i <- 0 until result.getValueSize by SaneWord.SIZE_IN_BYTES)
+      newValues.add(SaneWord.fromBytes(result.getValue, i).fixedPrecisionValue)
+
+    newValues
   }
 
   @throws[IOException]
   @throws[SaneException]
   def setStringValue(newValue: String): String = {
+    // check for type agreement
     Preconditions.checkState(getValueType eq OptionValueType.STRING)
     Preconditions.checkState(getValueCount == 1)
     Preconditions.checkState(isWriteable)
+
+    // new value must be STRICTLY less than size(), as SANE includes the
+    // trailing null
+    // that we will add later in its size
     Preconditions.checkState(newValue.length < getSize, "string value '" + newValue + "' (length=" + newValue.length + ") exceeds maximum size of " + (getSize - 1) + " byte(s) for option " + getName)
+
     val result: SaneOption.ControlOptionResult = writeOption(newValue)
     Preconditions.checkState(result.getType eq OptionValueType.STRING)
+
+    // TODO(sjr): maybe this should go somewhere common?
     val optionValueFromServer: String = new String(result.getValue, 0, result.getValueSize - 1, Charsets.ISO_8859_1)
+
     Preconditions.checkState(result.getInfo.contains(SaneOption.OptionWriteInfo.INEXACT) ^ newValue == optionValueFromServer, "new option value does not match when it should")
-    return optionValueFromServer
+
+    optionValueFromServer
   }
 
+  /**
+    * Set the value of the current option to the supplied value. Option value must be of integer type
+    *
+    * TODO: consider caching the returned value for "fast read" later
+    *
+    * @param newValue
+    * for the option
+    * @return the value actually set
+    * @throws IOException
+    */
   @throws[IOException]
   @throws[SaneException]
   def setIntegerValue(newValue: Int): Int = {
     Preconditions.checkState(getValueCount == 1, "option is an array")
+
+    // check that this option is readable
     Preconditions.checkState(isWriteable)
+
+    // Send RPC corresponding to:
+    // SANE_Status sane_control_option (SANE_Handle h, SANE_Int n, SANE_Action a, void *v, SANE_Int * i);
+
     val result: SaneOption.ControlOptionResult = writeOption(ImmutableList.of(newValue))
     Preconditions.checkState(result.getType eq OptionValueType.INT)
     Preconditions.checkState(result.getValueSize == SaneWord.SIZE_IN_BYTES)
+
     SaneWord.fromBytes(result.getValue).integerValue
   }
 
@@ -275,15 +334,13 @@ class SaneOption private[jfreesane](val device: SaneDevice, val optionNumber: In
   @throws[SaneException]
   def setIntegerValue(newValue: util.List[Int]): util.List[Integer] = {
     val result: SaneOption.ControlOptionResult = writeOption(newValue)
+
     val newValues: util.List[Integer] = Lists.newArrayListWithCapacity(result.getValueSize / SaneWord.SIZE_IN_BYTES)
     var i: Int = 0
-    while (i < result.getValueSize) {
-      {
-        newValues.add(SaneWord.fromBytes(result.getValue, i).integerValue)
-      }
-      i += SaneWord.SIZE_IN_BYTES
-    }
-    return newValues
+    for (i <- 0 until result.getValueSize by SaneWord.SIZE_IN_BYTES)
+      newValues.add(SaneWord.fromBytes(result.getValue, i).integerValue)
+
+    newValues
   }
 
   @throws[IOException]
@@ -291,6 +348,7 @@ class SaneOption private[jfreesane](val device: SaneDevice, val optionNumber: In
   private def writeWordListOption(value: util.List[SaneWord]): SaneOption.ControlOptionResult = {
     Preconditions.checkState(isWriteable, "option is not writeable")
     Preconditions.checkState(isActive, "option is not active")
+
     val out: SaneOutputStream = device.getSession.getOutputStream
     out.write(SaneRpcCode.SANE_NET_CONTROL_OPTION)
     out.write(device.getHandle.getHandle)
@@ -399,9 +457,13 @@ object SaneOption {
   }
 
   object OptionAction {
+
     object GET_VALUE extends OptionAction(0)
+
     object SET_VALUE extends OptionAction(1)
+
     object SET_AUTO extends OptionAction(2)
+
   }
 
   /**
@@ -413,6 +475,7 @@ object SaneOption {
   }
 
   object OptionUnits {
+
     /**
       * The option has no units.
       */
@@ -447,6 +510,7 @@ object SaneOption {
       * The option unit is microseconds.
       */
     object UNIT_MICROSECOND extends OptionUnits(6)
+
   }
 
   /**
@@ -458,6 +522,7 @@ object SaneOption {
   }
 
   object OptionWriteInfo {
+
     /**
       * The value passed to SANE was accepted, but the SANE daemon has chosen a different
       * value than the one specified.
@@ -474,6 +539,7 @@ object SaneOption {
       * Setting the option may have caused a parameter set by the user to have changed.
       */
     object RELOAD_PARAMETERS extends OptionWriteInfo(4)
+
   }
 
   @throws[IOException]
