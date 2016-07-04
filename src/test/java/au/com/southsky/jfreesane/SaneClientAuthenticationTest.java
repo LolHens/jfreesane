@@ -33,19 +33,19 @@ public class SaneClientAuthenticationTest {
     SaneClientAuthentication sca = new SaneClientAuthentication(getTestConfigurationSource());
 
     ClientCredential pixmaCreds = sca.getCredentialForResource("pixma");
-    Assert.assertEquals("pixma", pixmaCreds.backend);
-    Assert.assertEquals("sane-user", pixmaCreds.username);
-    Assert.assertEquals("password", pixmaCreds.password);
+    Assert.assertEquals("pixma", pixmaCreds.backend());
+    Assert.assertEquals("sane-user", pixmaCreds.username());
+    Assert.assertEquals("password", pixmaCreds.password());
 
     ClientCredential netCreds = sca.getCredentialForResource("net");
-    Assert.assertEquals("net", netCreds.backend);
-    Assert.assertEquals("other-user", netCreds.username);
-    Assert.assertEquals("strongPassword", netCreds.password);
+    Assert.assertEquals("net", netCreds.backend());
+    Assert.assertEquals("other-user", netCreds.username());
+    Assert.assertEquals("strongPassword", netCreds.password());
 
     ClientCredential mustekCreds = sca.getCredentialForResource("mustek");
-    Assert.assertEquals("mustek", mustekCreds.backend);
-    Assert.assertEquals("user", mustekCreds.username);
-    Assert.assertEquals("", mustekCreds.password);
+    Assert.assertEquals("mustek", mustekCreds.backend());
+    Assert.assertEquals("user", mustekCreds.username());
+    Assert.assertEquals("", mustekCreds.password());
   }
 
   @Test
