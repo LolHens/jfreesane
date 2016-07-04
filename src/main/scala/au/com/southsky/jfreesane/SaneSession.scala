@@ -3,9 +3,9 @@ package au.com.southsky.jfreesane
 import java.awt.image.BufferedImage
 import java.io.{BufferedInputStream, Closeable, IOException}
 import java.net.{InetAddress, InetSocketAddress, Socket}
+import java.util
 import java.util.concurrent.TimeUnit
 import java.util.logging.{Level, Logger}
-import java.util
 
 import com.google.common.base.Preconditions
 
