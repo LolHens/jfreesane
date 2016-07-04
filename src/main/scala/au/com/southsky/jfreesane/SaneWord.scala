@@ -21,34 +21,26 @@ final class SaneWord private(val value: Array[Byte]) {
     * Returns a copy of the underlying byte array representing this {@link SaneWord}. The length of
     * the array is {@link #SIZE_IN_BYTES} bytes.
     */
-  def getValue: Array[Byte] = {
-    return Arrays.copyOf(value, value.length)
-  }
+  def getValue: Array[Byte] = Arrays.copyOf(value, value.length)
 
   /**
     * Treats this {@link SaneWord} as an integer and returns the represented value.
     */
   def integerValue: Int = {
     try {
-      return new DataInputStream(new ByteArrayInputStream(value)).readInt
-    }
-    catch {
-      case e: IOException => {
+      new DataInputStream(new ByteArrayInputStream(value)).readInt
+    } catch {
+      case e: IOException =>
         throw new IllegalStateException(e)
-      }
     }
   }
 
   /**
     * Returns the value of this {@link SaneWord} treated as a SANE fixed precision value.
     */
-  def fixedPrecisionValue: Double = {
-    return integerValue.toDouble / SaneWord.PRECISION
-  }
+  def fixedPrecisionValue: Double = integerValue.toDouble / SaneWord.PRECISION
 
-  override def toString: String = {
-    return Arrays.toString(value)
-  }
+  override def toString: String = Arrays.toString(value)
 }
 
 object SaneWord {
@@ -66,9 +58,7 @@ object SaneWord {
     * @see SaneWord#integerValue
     */
   val TO_INTEGER_FUNCTION: Function[SaneWord, Integer] = new Function[SaneWord, Integer]() {
-    def apply(word: SaneWord): Integer = {
-      return word.integerValue
-    }
+    def apply(word: SaneWord): Integer = word.integerValue
   }
 
   /**
@@ -78,9 +68,7 @@ object SaneWord {
     * @see SaneWord#fixedPrecisionValue
     */
   val TO_FIXED_FUNCTION: Function[SaneWord, java.lang.Double] = new Function[SaneWord, java.lang.Double]() {
-    def apply(word: SaneWord): java.lang.Double = {
-      return word.fixedPrecisionValue
-    }
+    def apply(word: SaneWord): java.lang.Double = word.fixedPrecisionValue
   }
 
   /**
@@ -90,10 +78,9 @@ object SaneWord {
   @throws[IOException]
   def fromStream(input: InputStream): SaneWord = {
     val newValue: Array[Byte] = new Array[Byte](SIZE_IN_BYTES)
-    if (ByteStreams.read(input, newValue, 0, newValue.length) != newValue.length) {
+    if (ByteStreams.read(input, newValue, 0, newValue.length) != newValue.length)
       throw new IOException("input stream was truncated while reading a word")
-    }
-    return new SaneWord(newValue)
+    new SaneWord(newValue)
   }
 
   /**
@@ -104,13 +91,11 @@ object SaneWord {
     val stream: DataOutputStream = new DataOutputStream(byteStream)
     try {
       stream.writeInt(value)
-    }
-    catch {
-      case e: IOException => {
+    } catch {
+      case e: IOException =>
         throw new IllegalArgumentException(e)
-      }
     }
-    return new SaneWord(byteStream.toByteArray)
+    new SaneWord(byteStream.toByteArray)
   }
 
   /**
@@ -127,16 +112,14 @@ object SaneWord {
     var result: Int = (major & 0xff) << 24
     result |= (minor & 0xff) << 16
     result |= (build & 0xffff) << 0
-    return forInt(result)
+    forInt(result)
   }
 
   /**
     * Creates a new {@link SaneWord} from a copy of the given byte array. The array must be of length
     * {@link #SIZE_IN_BYTES}, anything else will cause a runtime exception to be thrown.
     */
-  def fromBytes(byteValue: Array[Byte]): SaneWord = {
-    return fromBytes(byteValue, 0)
-  }
+  def fromBytes(byteValue: Array[Byte]): SaneWord = fromBytes(byteValue, 0)
 
   /**
     * Creates a new {@link SaneWord} from a copy of the given bytes within the array.
@@ -146,7 +129,7 @@ object SaneWord {
   def fromBytes(byteValue: Array[Byte], offset: Int): SaneWord = {
     Preconditions.checkArgument(offset >= 0, "offset must be positive or zero": Object)
     Preconditions.checkArgument(offset + SIZE_IN_BYTES <= byteValue.length)
-    return new SaneWord(Arrays.copyOfRange(byteValue, offset, offset + SIZE_IN_BYTES))
+    new SaneWord(Arrays.copyOfRange(byteValue, offset, offset + SIZE_IN_BYTES))
   }
 
   /**
@@ -155,7 +138,5 @@ object SaneWord {
     * {@code SaneWord.forFixedPrecision(someValue).fixedPrecisionValue()} will not necessarily yield
     * {@code someValue}.
     */
-  def forFixedPrecision(value: Double): SaneWord = {
-    return SaneWord.forInt((value * PRECISION).toInt)
-  }
+  def forFixedPrecision(value: Double): SaneWord = SaneWord.forInt((value * PRECISION).toInt)
 }
