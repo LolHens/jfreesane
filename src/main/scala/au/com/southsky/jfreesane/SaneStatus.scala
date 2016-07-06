@@ -3,39 +3,50 @@ package au.com.southsky.jfreesane
 /**
   * Created by u016595 on 01.07.2016.
   */
-sealed class SaneStatus(name: String, wireValue: Int) extends SaneEnum2[SaneStatus](name, wireValue)
+sealed class SaneStatus(wireValue: Int) extends SaneEnum[SaneStatus](wireValue)
 
-object SaneStatus {
+object SaneStatus extends SaneEnumObject[SaneStatus] {
 
-  object STATUS_GOOD extends SaneStatus("STATUS_GOOD", 0)
+  object STATUS_GOOD extends SaneStatus(0)
 
-  object STATUS_UNSUPPORTED extends SaneStatus("STATUS_UNSUPPORTED", 1)
+  object STATUS_UNSUPPORTED extends SaneStatus(1)
 
-  object STATUS_CANCELLED extends SaneStatus("STATUS_CANCELLED", 2)
+  object STATUS_CANCELLED extends SaneStatus(2)
 
-  object STATUS_DEVICE_BUSY extends SaneStatus("STATUS_DEVICE_BUSY", 3)
+  object STATUS_DEVICE_BUSY extends SaneStatus(3)
 
-  object STATUS_INVAL extends SaneStatus("STATUS_INVAL", 4)
+  object STATUS_INVAL extends SaneStatus(4)
 
-  object STATUS_EOF extends SaneStatus("STATUS_EOF", 5)
+  object STATUS_EOF extends SaneStatus(5)
 
-  object STATUS_JAMMED extends SaneStatus("STATUS_JAMMED", 6)
+  object STATUS_JAMMED extends SaneStatus(6)
 
-  object STATUS_NO_DOCS extends SaneStatus("STATUS_NO_DOCS", 7)
+  object STATUS_NO_DOCS extends SaneStatus(7)
 
-  object STATUS_COVER_OPEN extends SaneStatus("STATUS_COVER_OPEN", 8)
+  object STATUS_COVER_OPEN extends SaneStatus(8)
 
-  object STATUS_IO_ERROR extends SaneStatus("STATUS_IO_ERROR", 9)
+  object STATUS_IO_ERROR extends SaneStatus(9)
 
-  object STATUS_NO_MEM extends SaneStatus("STATUS_NO_MEM", 10)
+  object STATUS_NO_MEM extends SaneStatus(10)
 
-  object STATUS_ACCESS_DENIED extends SaneStatus("STATUS_ACCESS_DENIED", 11)
-
-  val tmp_STATUS_NO_DOCS = STATUS_NO_DOCS
-
-  val tmp_STATUS_ACCESS_DENIED = STATUS_ACCESS_DENIED
+  object STATUS_ACCESS_DENIED extends SaneStatus(11)
 
   def fromWireValue(wireValue: Int): SaneStatus = SaneEnums.valueOf(classOf[SaneStatus], wireValue)
 
   def fromWireValue(statusWord: SaneWord): SaneStatus = fromWireValue(statusWord.integerValue)
+
+  override def values: Set[SaneStatus] = Set(
+    STATUS_GOOD,
+    STATUS_UNSUPPORTED,
+    STATUS_CANCELLED,
+    STATUS_DEVICE_BUSY,
+    STATUS_INVAL,
+    STATUS_EOF,
+    STATUS_JAMMED,
+    STATUS_NO_DOCS,
+    STATUS_COVER_OPEN,
+    STATUS_IO_ERROR,
+    STATUS_NO_MEM,
+    STATUS_ACCESS_DENIED
+  )
 }

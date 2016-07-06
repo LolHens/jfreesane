@@ -18,14 +18,14 @@ object SaneEnums {
   private val cachedTypeMaps: util.Map[Class[_], util.Map[Integer, _]] = Maps.newHashMap()
 
   @SuppressWarnings(Array("unchecked"))
-  private def mapForType[T <: Enum[T] with SaneEnum[T]](enumType: Class[T]): util.Map[Integer, T] =
+  private def mapForType[T <: SaneEnum[T]](enumType: Class[T]): util.Map[Integer, T] =
     if (cachedTypeMaps.containsKey(enumType))
       cachedTypeMaps.get(enumType).asInstanceOf[util.Map[Integer, T]]
     else {
       val mapBuilder: ImmutableMap.Builder[Integer, T] = ImmutableMap.builder()
 
       for (value <- enumType.getEnumConstants)
-        mapBuilder.put(value.getWireValue, value)
+        mapBuilder.put(value.wireValue, value)
 
       val result: util.Map[Integer, T] = mapBuilder.build
       cachedTypeMaps.put(enumType, result)
@@ -38,12 +38,12 @@ object SaneEnums {
     * Returns a set of {@code T} obtained by treating {@code wireValue} as a bit vector whose bits
     * represent the wire values of the enum constants of the given {@code enumType}.
     */
-  def enumSet[T <: Enum[T] with SaneEnum[T]](enumType: Class[T], wireValue: Int): Set[T] = {
+  def enumSet[T <: SaneEnum[T]](enumType: Class[T], wireValue: Int): Set[T] = {
     val enumConstants: Array[T] = enumType.getEnumConstants
     val values: util.List[T] = Lists.newArrayListWithCapacity(enumConstants.length)
 
     for (value <- enumConstants)
-      if ((wireValue & value.getWireValue) != 0)
+      if ((wireValue & value.wireValue) != 0)
         values.add(value)
 
     // TODO
@@ -60,12 +60,12 @@ object SaneEnums {
 
     import scala.collection.JavaConversions._
     for (value <- values)
-      result |= value.getWireValue
+      result |= value.wireValue
 
     result
   }
 
-  def valueOf[T <: Enum[T] with SaneEnum[T]](enumType: Class[T], valueType: Int): T = mapForType(enumType).get(valueType)
+  def valueOf[T <: SaneEnum[T]](enumType: Class[T], valueType: Int): T = mapForType(enumType).get(valueType)
 
-  def valueOf[T <: Enum[T] with SaneEnum[T]](enumType: Class[T], value: SaneWord): T = valueOf(enumType, value.integerValue)
+  def valueOf[T <: SaneEnum[T]](enumType: Class[T], value: SaneWord): T = valueOf(enumType, value.integerValue)
 }

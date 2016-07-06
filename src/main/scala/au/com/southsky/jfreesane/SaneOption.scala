@@ -350,7 +350,7 @@ class SaneOption private[jfreesane](val device: SaneDevice,
     out.write(SaneRpcCode.SANE_NET_CONTROL_OPTION)
     out.write(device.getHandle.handle)
     out.write(SaneWord.forInt(optionNumber))
-    out.write(SaneWord.forInt(SaneOption.OptionAction.SET_VALUE.getWireValue))
+    out.write(SaneWord.forInt(SaneOption.OptionAction.SET_VALUE.wireValue))
     out.write(valueType)
 
     out.write(SaneWord.forInt(value.size * SaneWord.SIZE_IN_BYTES))
@@ -381,7 +381,7 @@ class SaneOption private[jfreesane](val device: SaneDevice,
     out.write(SaneRpcCode.SANE_NET_CONTROL_OPTION)
     out.write(SaneWord.forInt(device.getHandle.handle.integerValue))
     out.write(SaneWord.forInt(this.optionNumber))
-    out.write(SaneWord.forInt(SaneOption.OptionAction.SET_VALUE.getWireValue))
+    out.write(SaneWord.forInt(SaneOption.OptionAction.SET_VALUE.wireValue))
     out.write(valueType)
 
     // even if the string is empty, we still write out at least 1 byte (null terminator)
@@ -458,94 +458,107 @@ class SaneOption private[jfreesane](val device: SaneDevice,
 object SaneOption {
   private val logger: Logger = Logger.getLogger(classOf[SaneOption].getName)
 
-  sealed class OptionAction(name: String, ordinal: Int, val actionNo: Int) extends Enum[OptionAction](name, ordinal) with SaneEnum[OptionAction] {
-    override def getWireValue: Int = actionNo
-  }
+  sealed class OptionAction(val actionNo: Int) extends SaneEnum[OptionAction](actionNo)
 
-  object OptionAction {
+  object OptionAction extends SaneEnumObject[OptionAction] {
 
-    object GET_VALUE extends OptionAction("GET_VALUE", 0, 0)
+    object GET_VALUE extends OptionAction( 0)
 
-    object SET_VALUE extends OptionAction("SET_VALUE", 1, 1)
+    object SET_VALUE extends OptionAction( 1)
 
-    object SET_AUTO extends OptionAction("SET_AUTO", 2, 2)
+    object SET_AUTO extends OptionAction(2)
 
+    override def values: Set[OptionAction] = Set(
+      GET_VALUE,
+      SET_VALUE,
+      SET_AUTO
+    )
   }
 
   /**
     * Instances of this enum are returned by {@link SaneOption#getUnits} indicating what units, if
     * any, the value has.
     */
-  sealed class OptionUnits(name: String, ordinal: Int, val wireValue: Int) extends Enum[OptionUnits](name, ordinal) with SaneEnum[OptionUnits] {
-    override def getWireValue: Int = wireValue
-  }
+  sealed class OptionUnits(wireValue: Int) extends SaneEnum[OptionUnits](wireValue)
 
-  object OptionUnits {
+  object OptionUnits extends SaneEnumObject[OptionUnits] {
 
     /**
       * The option has no units.
       */
-    object UNIT_NONE extends OptionUnits("UNIT_NONE", 0, 0)
+    object UNIT_NONE extends OptionUnits(0)
 
     /**
       * The option unit is pixels.
       */
-    object UNIT_PIXEL extends OptionUnits("UNIT_PIXEL", 1, 1)
+    object UNIT_PIXEL extends OptionUnits(1)
 
     /**
       * The option unit is bits.
       */
-    object UNIT_BIT extends OptionUnits("UNIT_BIT", 2, 2)
+    object UNIT_BIT extends OptionUnits(2)
 
     /**
       * The option unit is millimeters.
       */
-    object UNIT_MM extends OptionUnits("UNIT_MM", 3, 3)
+    object UNIT_MM extends OptionUnits(3)
 
     /**
       * The option unit is dots per inch.
       */
-    object UNIT_DPI extends OptionUnits("UNIT_DPI", 4, 4)
+    object UNIT_DPI extends OptionUnits(4)
 
     /**
       * The option unit is a percentage.
       */
-    object UNIT_PERCENT extends OptionUnits("UNIT_PERCENT", 5, 5)
+    object UNIT_PERCENT extends OptionUnits(5)
 
     /**
       * The option unit is microseconds.
       */
-    object UNIT_MICROSECOND extends OptionUnits("UNIT_MICROSECOND", 6, 6)
+    object UNIT_MICROSECOND extends OptionUnits(6)
 
+    override def values: Set[OptionUnits] = Set(
+      UNIT_NONE,
+      UNIT_PIXEL,
+      UNIT_BIT,
+      UNIT_MM,
+      UNIT_DPI,
+      UNIT_PERCENT,
+      UNIT_MICROSECOND
+    )
   }
 
   /**
     * Represents the information that the SANE daemon returns about the effect of modifying an
     * option.
     */
-  sealed class OptionWriteInfo(name: String, ordinal: Int, val wireValue: Int) extends Enum[OptionWriteInfo](name, ordinal) with SaneEnum[OptionWriteInfo] {
-    override def getWireValue: Int = wireValue
-  }
+  sealed class OptionWriteInfo(wireValue: Int) extends SaneEnum[OptionWriteInfo](wireValue)
 
-  object OptionWriteInfo {
+  object OptionWriteInfo extends SaneEnumObject[OptionWriteInfo] {
 
     /**
       * The value passed to SANE was accepted, but the SANE daemon has chosen a different
       * value than the one specified.
       */
-    object INEXACT extends OptionWriteInfo("INEXACT", 0, 1)
+    object INEXACT extends OptionWriteInfo(1)
 
     /**
       * Setting the option may have resulted in changes to other options and the client should
       * re-read options whose values it needs.
       */
-    object RELOAD_OPTIONS extends OptionWriteInfo("RELOAD_OPTIONS", 1, 2)
+    object RELOAD_OPTIONS extends OptionWriteInfo(2)
 
     /**
       * Setting the option may have caused a parameter set by the user to have changed.
       */
-    object RELOAD_PARAMETERS extends OptionWriteInfo("RELOAD_PARAMETERS", 2, 4)
+    object RELOAD_PARAMETERS extends OptionWriteInfo(4)
 
+    override def values: Set[OptionWriteInfo] = Set(
+      INEXACT,
+      RELOAD_OPTIONS,
+      RELOAD_PARAMETERS
+    )
   }
 
   @throws[IOException]
