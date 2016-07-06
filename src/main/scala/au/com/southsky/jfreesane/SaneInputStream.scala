@@ -3,7 +3,7 @@ package au.com.southsky.jfreesane
 import java.io.{IOException, InputStream}
 import java.util
 import java.util.logging.{Level, Logger}
-
+import scala.collection.JavaConversions._
 import com.google.common.base.Charsets
 import com.google.common.collect.{ImmutableList, Lists}
 import com.google.common.io.ByteStreams
@@ -209,7 +209,7 @@ class SaneInputStream(val saneSession: SaneSession,
         throw new IllegalStateException("Unknown constraint type")
     }
 
-    new SaneOptionDescriptor(optionName, optionTitle, optionDescription, currentGroup, valueType, units, size, SaneEnums.enumSet(classOf[OptionCapability], capabilityWord), constraintType, rangeConstraint, stringConstraints, valueConstraints)
+    new SaneOptionDescriptor(optionName, optionTitle, optionDescription, currentGroup, valueType, units, size, SaneEnums.enumSet(classOf[OptionCapability], capabilityWord), constraintType, rangeConstraint, stringConstraints.toList, valueConstraints.toList)
   }
 }
 

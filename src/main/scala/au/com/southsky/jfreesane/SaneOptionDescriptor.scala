@@ -15,12 +15,12 @@ class SaneOptionDescriptor(val name: String,
                            val valueType: OptionValueType,
                            val units: SaneOption.OptionUnits,
                            val size: Int,
-                           val optionCapabilities: util.Set[OptionCapability],
+                           val optionCapabilities: Set[OptionCapability],
                            val constraintType: OptionValueConstraintType,
                            val rangeConstraints: RangeConstraint,
-                           val stringContraints: util.List[String],
+                           val stringContraints: List[String],
                            // TODO: wrong level of abstraction
-                           val wordConstraints: util.List[SaneWord]) {
+                           val wordConstraints: List[SaneWord]) {
   def getName: String = name
 
   def getTitle: String = title
@@ -41,7 +41,7 @@ class SaneOptionDescriptor(val name: String,
 
   def getRangeConstraints: RangeConstraint = rangeConstraints
 
-  def getStringConstraints: util.List[String] = stringContraints
+  def getStringConstraints: List[String] = stringContraints
 
-  def getWordConstraints: List[SaneWord] = wordConstraints.toList
+  def getWordConstraints: List[SaneWord] = wordConstraints
 }

@@ -8,7 +8,7 @@ import java.util
 import java.util.concurrent.atomic.{AtomicInteger, AtomicReference}
 import java.util.logging.{Level, Logger}
 import javax.imageio.ImageIO
-
+import scala.collection.JavaConversions._
 import com.google.common.base.Charsets
 import com.google.common.collect.{ImmutableList, Lists}
 import com.google.common.io.{Closeables, Files}
@@ -100,8 +100,8 @@ import org.junit._
       for (option <- options) {
         System.out.println(option.toString)
 
-        if (option.getType ne OptionValueType.tmp_button)
-          System.out.println(option.getValueCount)
+        if (option.`type` ne OptionValueType.tmp_button)
+          System.out.println(option.valueCount)
       }
     } finally {
       device.close
@@ -118,21 +118,21 @@ import org.junit._
       Assert.assertTrue("Expect multiple SaneOptions", options.size > 0)
       // option 0 is always "Number of options" must be greater than zero
 
-      val optionCount: Int = options.get(0).getIntegerValue
+      val optionCount: Int = options.get(0).integerValue
       Assert.assertTrue("Option count must be > 0", optionCount > 0)
 
       // print out the value of all integer-valued options
 
       import scala.collection.JavaConversions._
       for (option <- options) {
-        System.out.print(option.getTitle)
+        System.out.print(option.title)
 
         if (!option.isActive)
           System.out.print(" [inactive]")
-        else if ((option.getType eq OptionValueType.tmp_int) && option.getValueCount == 1 && option.isActive)
-          System.out.print("=" + option.getIntegerValue)
-        else if (option.getType eq OptionValueType.tmp_string)
-          System.out.print("=" + option.getStringValue(Charsets.US_ASCII))
+        else if ((option.`type` eq OptionValueType.tmp_int) && option.valueCount == 1 && option.isActive)
+          System.out.print("=" + option.integerValue)
+        else if (option.`type` eq OptionValueType.tmp_string)
+          System.out.print("=" + option.stringValue(Charsets.US_ASCII))
 
         System.out.println()
       }
@@ -149,7 +149,7 @@ import org.junit._
     try {
       device.open
       val modeOption: SaneOption = device.getOption("mode")
-      assertThat(modeOption.setStringValue("Gray")).isEqualTo("Gray")
+      assertThat(modeOption.stringValue = "Gray").isEqualTo("Gray")
     } finally {
       device.close
     }
@@ -160,8 +160,8 @@ import org.junit._
   def adfAcquisitionSucceeds = {
     val device: SaneDevice = session.getDevice("test")
     device.open
-    assertThat(device.getOption("source").getStringConstraints).contains("Automatic Document Feeder")
-    device.getOption("source").setStringValue("Automatic Document Feeder")
+    Truth.assertThat(device.getOption("source").stringConstraints: util.List[String]).contains("Automatic Document Feeder")
+    device.getOption("source").stringValue = "Automatic Document Feeder"
 
     def loop: Unit =
       for (i <- 0 until 20)
@@ -184,8 +184,8 @@ import org.junit._
   def acquireImageSucceedsAfterOutOfPaperCondition = {
     val device: SaneDevice = session.getDevice("test")
     device.open
-    assertThat(device.getOption("source").getStringConstraints).has.item("Automatic Document Feeder")
-    device.getOption("source").setStringValue("Automatic Document Feeder")
+    assertThat(device.getOption("source").stringConstraints: util.List[String]).has.item("Automatic Document Feeder")
+    device.getOption("source").stringValue = "Automatic Document Feeder"
 
     var thrown: Boolean = false
     for (i <- 0 until 20)
@@ -212,7 +212,7 @@ import org.junit._
     try {
       device.open
       val modeOption: SaneOption = device.getOption("mode")
-      assertEquals("Gray", modeOption.setStringValue("Gray"))
+      assertEquals("Gray", modeOption.stringValue = "Gray")
       val image: BufferedImage = device.acquireImage
 
       val file: File = File.createTempFile("mono-image", ".png")
@@ -234,8 +234,8 @@ import org.junit._
     // Solid black and white
     try {
       device.open
-      device.getOption("br-x").setFixedValue(200)
-      device.getOption("br-y").setFixedValue(200)
+      device.getOption("br-x").fixedValue = 200
+      device.getOption("br-y").fixedValue = 200
 
       /*
        * assertProducesCorrectImage(device, "Gray", 1, "Solid white");
@@ -276,10 +276,10 @@ import org.junit._
 
     try {
       device.open
-      assertThat(device.getOption("mode").getStringValue(Charsets.US_ASCII)).matches("Gray|Color")
-      assertThat(device.getOption("mode").setStringValue("Gray")).isEqualTo("Gray")
-      assertThat(device.getOption("mode").getStringValue(Charsets.US_ASCII)).isEqualTo("Gray")
-      assertThat(device.getOption("read-return-value").getStringValue(Charsets.US_ASCII)).isEqualTo("Default")
+      assertThat(device.getOption("mode").stringValue(Charsets.US_ASCII)).matches("Gray|Color")
+      assertThat(device.getOption("mode").stringValue = "Gray").isEqualTo("Gray")
+      assertThat(device.getOption("mode").stringValue(Charsets.US_ASCII)).isEqualTo("Gray")
+      assertThat(device.getOption("read-return-value").stringValue(Charsets.US_ASCII)).isEqualTo("Default")
     } finally {
       device.close
     }
@@ -294,8 +294,8 @@ import org.junit._
       device.open
 
       // this option gets rounded to the nearest whole number by the backend
-      assertEquals(123, device.getOption("br-x").setFixedValue(123.456), 0.0001)
-      assertEquals(123, device.getOption("br-x").getFixedValue, 0.0001)
+      assertEquals(123, device.getOption("br-x").fixedValue = 123.456, 0.0001)
+      assertEquals(123, device.getOption("br-x").fixedValue, 0.0001)
     } finally {
       device.close
     }
@@ -310,10 +310,10 @@ import org.junit._
       device.open
 
       val option: SaneOption = device.getOption("hand-scanner")
-      assertThat(java.lang.Boolean.valueOf(option.setBooleanValue(true))).isTrue
-      assertThat(java.lang.Boolean.valueOf(option.getBooleanValue)).isTrue
-      assertThat(java.lang.Boolean.valueOf(option.setBooleanValue(false))).isFalse
-      assertThat(java.lang.Boolean.valueOf(option.getBooleanValue)).isFalse
+      assertThat(java.lang.Boolean.valueOf(option.booleanValue = true)).isTrue
+      assertThat(java.lang.Boolean.valueOf(option.booleanValue)).isTrue
+      assertThat(java.lang.Boolean.valueOf(option.booleanValue = false)).isFalse
+      assertThat(java.lang.Boolean.valueOf(option.booleanValue)).isFalse
     } finally {
       device.close
     }
@@ -329,8 +329,8 @@ import org.junit._
 
       val option: SaneOption = device.getOption("string-constraint-string-list")
       Truth2.assertThat(option).isNotNull
-      Truth2.assertThat(option.getConstraintType).isEqualTo(OptionValueConstraintType.tmp_stringList)
-      assertThat(option.getStringConstraints).has.exactly("First entry", "Second entry", "This is the very long third entry. Maybe the frontend has an idea how to display it")
+      Truth2.assertThat(option.constraintType).isEqualTo(OptionValueConstraintType.tmp_stringList)
+      assertThat(option.stringConstraints: util.List[String]).has.exactly("First entry", "Second entry", "This is the very long third entry. Maybe the frontend has an idea how to display it")
     } finally {
       device.close
     }
@@ -346,8 +346,8 @@ import org.junit._
 
       val option: SaneOption = device.getOption("int-constraint-word-list")
       assertNotNull(option)
-      assertEquals(OptionValueConstraintType.tmp_valueList, option.getConstraintType)
-      assertEquals(ImmutableList.of(-42, -8, 0, 17, 42, 256, 65536, 16777216, 1073741824), option.getIntegerValueListConstraint)
+      assertEquals(OptionValueConstraintType.tmp_valueList, option.constraintType)
+      assertEquals(ImmutableList.of(-42, -8, 0, 17, 42, 256, 65536, 16777216, 1073741824), option.integerValueListConstraint)
     } finally {
       device.close
     }
@@ -363,9 +363,9 @@ import org.junit._
 
       val option: SaneOption = device.getOption("fixed-constraint-word-list")
       assertNotNull(option)
-      assertEquals(OptionValueConstraintType.tmp_valueList, option.getConstraintType)
+      assertEquals(OptionValueConstraintType.tmp_valueList, option.constraintType)
       val expected: List[Double] = List(-32.7d, 12.1d, 42d, 129.5d)
-      val actual: List[Double] = option.getFixedValueListConstraint
+      val actual: List[Double] = option.fixedValueListConstraint
       assertEquals(expected.size, actual.size)
 
       for (i <- expected.indices)
@@ -385,10 +385,10 @@ import org.junit._
 
       val option: SaneOption = device.getOption("int-constraint-range")
       assertNotNull(option)
-      assertEquals(OptionValueConstraintType.tmp_range, option.getConstraintType)
-      assertEquals(4, option.getRangeConstraints.getMinimumInteger)
-      assertEquals(192, option.getRangeConstraints.getMaximumInteger)
-      assertEquals(2, option.getRangeConstraints.getQuantumInteger)
+      assertEquals(OptionValueConstraintType.tmp_range, option.constraintType)
+      assertEquals(4, option.rangeConstraints.minInt)
+      assertEquals(192, option.rangeConstraints.maxInt)
+      assertEquals(2, option.rangeConstraints.quantumInt)
     } finally {
       device.close
     }
@@ -404,10 +404,10 @@ import org.junit._
 
       val option: SaneOption = device.getOption("fixed-constraint-range")
       assertNotNull(option)
-      assertEquals(OptionValueConstraintType.tmp_range, option.getConstraintType)
-      assertEquals(-42.17, option.getRangeConstraints.getMinimumFixed, 0.00001)
-      assertEquals(32767.9999, option.getRangeConstraints.getMaximumFixed, 0.00001)
-      assertEquals(2.0, option.getRangeConstraints.getQuantumFixed, 0.00001)
+      assertEquals(OptionValueConstraintType.tmp_range, option.constraintType)
+      assertEquals(-42.17, option.rangeConstraints.minFixed, 0.00001)
+      assertEquals(32767.9999, option.rangeConstraints.maxFixed, 0.00001)
+      assertEquals(2.0, option.rangeConstraints.quantumFixed, 0.00001)
     } finally {
       device.close
     }
@@ -424,14 +424,14 @@ import org.junit._
       val option: SaneOption = device.getOption("gamma-table")
       assertNotNull(option)
       //      assertFalse(option.isConstrained());
-      assertEquals(OptionValueType.tmp_int, option.getType)
+      assertEquals(OptionValueType.tmp_int, option.`type`)
       val values: util.List[Integer] = Lists.newArrayList()
 
-      for (i <- 0 until option.getValueCount)
+      for (i <- 0 until option.valueCount)
         values.add(i % 256)
 
-      assertEquals(values, option.setIntegerValue(values))
-      assertEquals(values, option.getIntegerArrayValue)
+      assertEquals(values, option.integerValue = values)
+      assertEquals(values, option.integerArrayValue)
     } finally {
       device.close
     }
@@ -447,15 +447,15 @@ import org.junit._
 
       val option: SaneOption = device.getOption("tl-x")
       assertNotNull(option)
-      assertEquals(OptionValueConstraintType.tmp_range, option.getConstraintType)
-      assertEquals(OptionValueType.tmp_fixed, option.getType)
-      val constraint: RangeConstraint = option.getRangeConstraints
+      assertEquals(OptionValueConstraintType.tmp_range, option.constraintType)
+      assertEquals(OptionValueType.tmp_fixed, option.`type`)
+      val constraint: RangeConstraint = option.rangeConstraints
 
-      System.out.println(constraint.getMinimumFixed)
-      System.out.println(constraint.getMaximumFixed)
-      System.out.println(option.getUnits)
-      System.out.println(option.setFixedValue(-4))
-      System.out.println(option.setFixedValue(97.5))
+      System.out.println(constraint.minFixed)
+      System.out.println(constraint.maxFixed)
+      System.out.println(option.units)
+      System.out.println(option.fixedValue = -4)
+      System.out.println(option.fixedValue = 97.5)
     } finally {
       device.close
     }
@@ -497,8 +497,8 @@ import org.junit._
       device.open
 
       device.getOption("button-update").setButtonValue
-      assertEquals("Gray", device.getOption("mode").setStringValue("Gray"))
-      assertEquals("Gray", device.getOption("mode").getStringValue)
+      assertEquals("Gray", device.getOption("mode").stringValue = "Gray")
+      assertEquals("Gray", device.getOption("mode").stringValue)
     } finally {
       device.close
     }
@@ -512,7 +512,7 @@ import org.junit._
     try {
       device.open
 
-      device.getOption("hand-scanner").setBooleanValue(true)
+      device.getOption("hand-scanner").booleanValue = true
       device.acquireImage
     } finally {
       device.close
@@ -527,9 +527,9 @@ import org.junit._
     try {
       device.open
 
-      assertEquals("Color pattern", device.getOption("test-picture").setStringValue("Color pattern"))
-      assertEquals("Color", device.getOption("mode").setStringValue("Color"))
-      assertEquals(true, device.getOption("three-pass").setBooleanValue(true))
+      assertEquals("Color pattern", device.getOption("test-picture").stringValue = "Color pattern")
+      assertEquals("Color", device.getOption("mode").stringValue = "Color")
+      assertEquals(true, device.getOption("three-pass").booleanValue = true)
 
       for (i <- 0 until 5) {
         val file = File.createTempFile("three-pass", ".png")
@@ -549,12 +549,12 @@ import org.junit._
     try {
       device.open
 
-      device.getOption("mode").setStringValue("Color")
-      device.getOption("resolution").setIntegerValue(200)
-      device.getOption("tl-x").setFixedValue(0.0)
-      device.getOption("tl-y").setFixedValue(0.0)
-      device.getOption("br-x").setFixedValue(105.0)
-      device.getOption("br-y").setFixedValue(149.0)
+      device.getOption("mode").stringValue = "Color"
+      device.getOption("resolution").integerValue = 200
+      device.getOption("tl-x").fixedValue = 0.0
+      device.getOption("tl-y").fixedValue = 0.0
+      device.getOption("br-x").fixedValue = 105.0
+      device.getOption("br-y").fixedValue = 149.0
       device.acquireImage
     } finally {
       device.close
@@ -598,8 +598,8 @@ import org.junit._
   def highResolutionScan = {
     val device: SaneDevice = session.getDevice("pixma")
     device.open
-    device.getOption("resolution").setIntegerValue(1200)
-    device.getOption("mode").setStringValue("Color")
+    device.getOption("resolution").integerValue = 1200
+    device.getOption("mode").stringValue = "Color"
     device.acquireImage
   }
 
@@ -633,9 +633,9 @@ import org.junit._
 
     val device: SaneDevice = session.getDevice("test")
     device.open
-    device.getOption("resolution").setFixedValue(1200)
-    device.getOption("mode").setStringValue("Color")
-    device.getOption("three-pass").setBooleanValue(true)
+    device.getOption("resolution").fixedValue = 1200
+    device.getOption("mode").stringValue = "Color"
+    device.getOption("three-pass").booleanValue = true
     device.acquireImage(listener)
     Truth2.assertThat(notifiedDevice.get()).isSameAs(device)
     Truth2.assertThat(frameCount.get()).isEqualTo(3)
@@ -683,9 +683,9 @@ import org.junit._
   @throws[IOException]
   @throws[SaneException]
   private def acquireImage(device: SaneDevice, mode: String, sampleDepth: Int, testPicture: String): BufferedImage = {
-    device.getOption("mode").setStringValue(mode)
-    device.getOption("depth").setIntegerValue(sampleDepth)
-    device.getOption("test-picture").setStringValue(testPicture)
+    device.getOption("mode").stringValue = mode
+    device.getOption("depth").integerValue = sampleDepth
+    device.getOption("test-picture").stringValue = testPicture
     return device.acquireImage
   }
 

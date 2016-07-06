@@ -4,6 +4,7 @@ import java.util
 
 import com.google.common.base.{MoreObjects, Preconditions}
 import com.google.common.collect.{ImmutableList, Lists}
+import scala.collection.JavaConversions._
 
 /**
   * Represents a group of options. The SANE backend may group options together. These may be handy
@@ -12,24 +13,26 @@ import com.google.common.collect.{ImmutableList, Lists}
   * @author James Ring (sjr@jdns.org)
   */
 class OptionGroup(val title: String) {
-  private val options: util.List[SaneOption] = Lists.newArrayList()
-
-  def getTitle: String = title
-
-  def getValueType: OptionValueType = OptionValueType.GROUP
+  private var _options: List[SaneOption] = Nil
 
   /**
     * Returns an immutable copy of the options in this group.
     */
-  def getOptions: util.List[SaneOption] = ImmutableList.copyOf(options.iterator())
+  def options = _options
 
   /**
     * Adds an option to the group.
     */
   private[jfreesane] def addOption(option: SaneOption) = {
-    Preconditions.checkState(option.getGroup eq this)
-    options.add(option)
+    Preconditions.checkState(option.group eq this)
+    _options = _options :+ option
   }
 
-  override def toString: String = MoreObjects.toStringHelper(this).add("title", title).add("options", options).toString
+  def valueType: OptionValueType = OptionValueType.GROUP
+
+  override def toString: String =
+    MoreObjects.toStringHelper(this)
+    .add("title", title)
+    .add("options", _options)
+    .toString
 }

@@ -109,7 +109,7 @@ class SaneSession @throws[IOException] private(val socket: Socket) extends Close
     do {
       val handle: SaneDeviceHandle = device.getHandle
       outputStream.write(SaneRpcCode.SANE_NET_START)
-      outputStream.write(handle.getHandle)
+      outputStream.write(handle.handle)
 
       val startStatus: SaneWord = inputStream.readWord
 
@@ -135,7 +135,7 @@ class SaneSession @throws[IOException] private(val socket: Socket) extends Close
 
       // Ask the server for the parameters of this scan
       outputStream.write(SaneRpcCode.SANE_NET_GET_PARAMETERS)
-      outputStream.write(handle.getHandle)
+      outputStream.write(handle.handle)
 
       var imageSocket: Socket = null
 
@@ -181,7 +181,7 @@ class SaneSession @throws[IOException] private(val socket: Socket) extends Close
   private[jfreesane] def closeDevice(handle: SaneDeviceHandle) {
     // RPC code
     outputStream.write(SaneRpcCode.SANE_NET_CLOSE)
-    outputStream.write(handle.getHandle)
+    outputStream.write(handle.handle)
 
     // read the dummy value from the wire, if it doesn't throw an exception
     // we assume the close was successful
@@ -192,7 +192,7 @@ class SaneSession @throws[IOException] private(val socket: Socket) extends Close
   private[jfreesane] def cancelDevice(handle: SaneDeviceHandle) {
     // RPC code
     outputStream.write(SaneRpcCode.SANE_NET_CANCEL)
-    outputStream.write(handle.getHandle)
+    outputStream.write(handle.handle)
 
     // read the dummy value from the wire, if it doesn't throw an exception
     // we assume the cancel was successful

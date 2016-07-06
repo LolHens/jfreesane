@@ -10,7 +10,12 @@ import com.google.common.primitives.UnsignedInteger
 /**
   * Represents a reader of {@link Frame frames}.
   */
-class FrameReader(val device: SaneDevice, val parameters: SaneParameters, val underlyingStream: InputStream, val bigEndian: Boolean, val listener: ScanListener) {
+class FrameReader(val device: SaneDevice,
+                  val parameters: SaneParameters,
+                  val underlyingStream: InputStream,
+                  val bigEndian: Boolean,
+                  val listener: ScanListener) {
+
   @throws[IOException]
   @throws[SaneException]
   def readFrame: Frame = {
@@ -21,8 +26,10 @@ class FrameReader(val device: SaneDevice, val parameters: SaneParameters, val un
     // For hand-held scanners where the line count is not known, report an image
     // size of -1 to the user.
     val reportedImageSize: Int =
-      if (parameters.getLineCount == -1) -1
-      else imageSize
+      if (parameters.getLineCount == -1)
+        -1
+      else
+        imageSize
 
     if (parameters.getLineCount > 0)
       bigArray = new ByteArrayOutputStream(imageSize)
@@ -41,6 +48,7 @@ class FrameReader(val device: SaneDevice, val parameters: SaneParameters, val un
         listener.recordRead(device, totalBytesRead, reportedImageSize)
       }
     }
+
     if (imageSize > 0 && bigArray.size < imageSize) {
       val difference: Int = imageSize - bigArray.size
       FrameReader.log.log(Level.WARNING, "truncated read (got {0}, expected {1} bytes)", Array(bigArray.size, imageSize))

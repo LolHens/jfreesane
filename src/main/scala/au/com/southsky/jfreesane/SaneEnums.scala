@@ -2,7 +2,9 @@ package au.com.southsky.jfreesane
 
 import java.util
 
-import com.google.common.collect.{ImmutableMap, Lists, Maps, Sets}
+import com.google.common.collect.{ImmutableMap, Lists, Maps}
+
+import scala.collection.JavaConversions._
 
 /**
   * Utilities for dealing with instances of {@link SaneEnum}.
@@ -16,7 +18,7 @@ object SaneEnums {
   private val cachedTypeMaps: util.Map[Class[_], util.Map[Integer, _]] = Maps.newHashMap()
 
   @SuppressWarnings(Array("unchecked"))
-  private def mapForType[T <: Enum[T] with SaneEnum](enumType: Class[T]): util.Map[Integer, T] =
+  private def mapForType[T <: Enum[T] with SaneEnum[T]](enumType: Class[T]): util.Map[Integer, T] =
     if (cachedTypeMaps.containsKey(enumType))
       cachedTypeMaps.get(enumType).asInstanceOf[util.Map[Integer, T]]
     else {
@@ -36,7 +38,7 @@ object SaneEnums {
     * Returns a set of {@code T} obtained by treating {@code wireValue} as a bit vector whose bits
     * represent the wire values of the enum constants of the given {@code enumType}.
     */
-  def enumSet[T <: Enum[T] with SaneEnum](enumType: Class[T], wireValue: Int): util.Set[T] = {
+  def enumSet[T <: Enum[T] with SaneEnum[T]](enumType: Class[T], wireValue: Int): Set[T] = {
     val enumConstants: Array[T] = enumType.getEnumConstants
     val values: util.List[T] = Lists.newArrayListWithCapacity(enumConstants.length)
 
@@ -44,7 +46,8 @@ object SaneEnums {
       if ((wireValue & value.getWireValue) != 0)
         values.add(value)
 
-    Sets.immutableEnumSet(values)
+    // TODO
+    values.toSet
   }
 
   /**
@@ -52,7 +55,7 @@ object SaneEnums {
     * method does not check to make sure the result is sensible: the caller must ensure that the set
     * contains members whose wire values can be ORed together in a logically correct fashion.
     */
-  def wireValue[T <: SaneEnum](values: util.Set[T]): Int = {
+  def wireValue[T <: SaneEnum[T]](values: util.Set[T]): Int = {
     var result: Int = 0
 
     import scala.collection.JavaConversions._
@@ -62,7 +65,7 @@ object SaneEnums {
     result
   }
 
-  def valueOf[T <: Enum[T] with SaneEnum](enumType: Class[T], valueType: Int): T = mapForType(enumType).get(valueType)
+  def valueOf[T <: Enum[T] with SaneEnum[T]](enumType: Class[T], valueType: Int): T = mapForType(enumType).get(valueType)
 
-  def valueOf[T <: Enum[T] with SaneEnum](enumType: Class[T], value: SaneWord): T = valueOf(enumType, value.integerValue)
+  def valueOf[T <: Enum[T] with SaneEnum[T]](enumType: Class[T], value: SaneWord): T = valueOf(enumType, value.integerValue)
 }

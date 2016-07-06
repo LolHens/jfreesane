@@ -3,7 +3,7 @@ package au.com.southsky.jfreesane
 import java.io._
 import java.util.Arrays
 
-import com.google.common.base.{Function, Preconditions}
+import com.google.common.base.Preconditions
 import com.google.common.io.ByteStreams
 
 /**
@@ -14,15 +14,12 @@ import com.google.common.io.ByteStreams
   * See <a href="http://www.sane-project.org/html/doc011.html#s4.2.1">the SANE specification</a> for
   * a thorough discussion about the SANE word type.
   *
+  * Returns a copy of the underlying byte array representing this {@link SaneWord}. The length of
+  * the array is {@link #SIZE_IN_BYTES} bytes.
+  *
   * @author James Ring (sjr@jdns.org)
   */
 final class SaneWord private(val value: Array[Byte]) {
-  /**
-    * Returns a copy of the underlying byte array representing this {@link SaneWord}. The length of
-    * the array is {@link #SIZE_IN_BYTES} bytes.
-    */
-  def getValue: Array[Byte] = Arrays.copyOf(value, value.length)
-
   /**
     * Treats this {@link SaneWord} as an integer and returns the represented value.
     */

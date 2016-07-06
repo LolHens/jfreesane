@@ -138,7 +138,7 @@ class SaneDevice private[jfreesane](val session: SaneSession,
     if (optionTitleMap == null) {
       groups.clear()
       optionTitleMap = Maps.uniqueIndex(SaneOption.optionsFor(this), new Function[SaneOption, String]() {
-        def apply(input: SaneOption): String = input.getName
+        def apply(input: SaneOption): String = input.name
       })
     }
 

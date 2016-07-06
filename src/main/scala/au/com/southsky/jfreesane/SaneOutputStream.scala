@@ -69,11 +69,11 @@ class SaneOutputStream(val wrappedStream: OutputStream) extends OutputStream {
     * {@link SaneWord#getValue}.
     */
   @throws[IOException]
-  def write(word: SaneWord): Unit = write(word.getValue)
+  def write(word: SaneWord): Unit = write(word.value)
 
   /**
     * Writes the wire value of the given {@link SaneEnum} to the underlying stream.
     */
   @throws[IOException]
-  def write(someEnum: SaneEnum): Unit = write(SaneWord.forInt(someEnum.getWireValue))
+  def write(someEnum: SaneEnum[_]): Unit = write(SaneWord.forInt(someEnum.getWireValue))
 }

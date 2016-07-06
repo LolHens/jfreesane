@@ -6,7 +6,7 @@ package au.com.southsky.jfreesane
   *
   * @author James Ring (sjr@jdns.org)
   */
-trait SaneEnum {
+trait SaneEnum[T <: SaneEnum[T]] {
   /**
     * Returns the integer used by the SANE network protocol to represent an instance of this enum on
     * the wire.
@@ -14,4 +14,8 @@ trait SaneEnum {
   def getWireValue: Int
 
   // def values: List[SaneEnum]
+}
+
+trait SaneEnumObject {
+  def values: Set[AnyRef] // TODO
 }

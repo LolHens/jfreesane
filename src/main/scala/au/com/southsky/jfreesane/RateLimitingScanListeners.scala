@@ -35,10 +35,6 @@ import com.google.common.collect.Maps
   * saneDevice.acquireImage(rateLimitedListener);
   * </pre>
   */
-class RateLimitingScanListeners private {
-  // Not to be instantiated.
-}
-
 object RateLimitingScanListeners {
   /**
     * Returns {@link ScanListener} that calls the given listener
@@ -46,13 +42,16 @@ object RateLimitingScanListeners {
     * time any one device. Record read events from one device that occur more
     * frequently are simply discarded.
     */
-  def noMoreFrequentlyThan(listener: ScanListener, time: Long, timeUnit: TimeUnit): ScanListener =
+  def noMoreFrequentlyThan(listener: ScanListener,
+                           time: Long,
+                           timeUnit: TimeUnit): ScanListener =
     new ScanListener() {
       private val lastSentTime: util.Map[SaneDevice, Long] = Maps.newHashMapWithExpectedSize(1)
 
       def scanningStarted(device: SaneDevice) = listener.scanningStarted(device)
 
-      def frameAcquisitionStarted(device: SaneDevice, parameters: SaneParameters, currentFrame: Int, likelyTotalFrames: Int) = listener.frameAcquisitionStarted(device, parameters, currentFrame, likelyTotalFrames)
+      def frameAcquisitionStarted(device: SaneDevice, parameters: SaneParameters, currentFrame: Int, likelyTotalFrames: Int) =
+        listener.frameAcquisitionStarted(device, parameters, currentFrame, likelyTotalFrames)
 
       def recordRead(device: SaneDevice, totalBytesRead: Int, imageSizeBytes: Int) = {
         val currentTime: Long = System.currentTimeMillis
