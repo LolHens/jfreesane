@@ -1,6 +1,7 @@
 package au.com.southsky.jfreesane
 
 import java.util
+import scala.collection.JavaConversions._
 
 /**
   * Describes a SANE option.
@@ -42,5 +43,5 @@ class SaneOptionDescriptor(val name: String,
 
   def getStringConstraints: util.List[String] = stringContraints
 
-  def getWordConstraints: util.List[SaneWord] = wordConstraints
+  def getWordConstraints: List[SaneWord] = wordConstraints.toList
 }

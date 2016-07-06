@@ -1,6 +1,6 @@
 package au.com.southsky.jfreesane
 
-import java.awt._
+import java.awt.Color
 import java.awt.image.{BufferedImage, Raster}
 import java.io.{File, IOException}
 import java.net.InetAddress
@@ -364,12 +364,12 @@ import org.junit._
       val option: SaneOption = device.getOption("fixed-constraint-word-list")
       assertNotNull(option)
       assertEquals(OptionValueConstraintType.tmp_valueList, option.getConstraintType)
-      val expected: util.List[Double] = ImmutableList.of(-32.7d, 12.1d, 42d, 129.5d)
-      val actual: util.List[java.lang.Double] = option.getFixedValueListConstraint
+      val expected: List[Double] = List(-32.7d, 12.1d, 42d, 129.5d)
+      val actual: List[Double] = option.getFixedValueListConstraint
       assertEquals(expected.size, actual.size)
 
-      for (i <- 0 until expected.size())
-        assertEquals(expected.get(i), actual.get(i), 0.00001)
+      for (i <- expected.indices)
+        assertEquals(expected(i), actual(i), 0.00001)
     } finally {
       device.close
     }

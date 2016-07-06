@@ -57,9 +57,7 @@ object SaneWord {
     *
     * @see SaneWord#integerValue
     */
-  val TO_INTEGER_FUNCTION: Function[SaneWord, Integer] = new Function[SaneWord, Integer]() {
-    def apply(word: SaneWord): Integer = word.integerValue
-  }
+  val TO_INTEGER_FUNCTION: SaneWord => Int = (word) => word.integerValue
 
   /**
     * A function that, when applied to a {@link SaneWord} instance, returns the SANE fixed precision
@@ -67,9 +65,7 @@ object SaneWord {
     *
     * @see SaneWord#fixedPrecisionValue
     */
-  val TO_FIXED_FUNCTION: Function[SaneWord, java.lang.Double] = new Function[SaneWord, java.lang.Double]() {
-    def apply(word: SaneWord): java.lang.Double = word.fixedPrecisionValue
-  }
+  val TO_FIXED_FUNCTION: SaneWord => Double = (word) => word.fixedPrecisionValue
 
   /**
     * Returns a new {@code SaneWord} by consuming {@link #SIZE_IN_BYTES} bytes from the given

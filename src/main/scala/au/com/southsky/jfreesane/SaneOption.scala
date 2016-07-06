@@ -72,11 +72,11 @@ class SaneOption private[jfreesane](val device: SaneDevice, val optionNumber: In
 
   def getStringConstraints: util.List[String] = descriptor.getStringConstraints
 
-  def getWordConstraints: util.List[SaneWord] = descriptor.getWordConstraints
+  def getWordConstraints: List[SaneWord] = descriptor.getWordConstraints
 
-  def getIntegerValueListConstraint: util.List[Integer] = Lists.transform(descriptor.getWordConstraints, SaneWord.TO_INTEGER_FUNCTION)
+  def getIntegerValueListConstraint: List[Int] = descriptor.getWordConstraints.map(SaneWord.TO_INTEGER_FUNCTION)
 
-  def getFixedValueListConstraint: util.List[java.lang.Double] = Lists.transform(descriptor.getWordConstraints, SaneWord.TO_FIXED_FUNCTION)
+  def getFixedValueListConstraint: List[Double] = descriptor.getWordConstraints.map(SaneWord.TO_FIXED_FUNCTION)
 
   override def toString: String = String.format("Option: %s, %s, value type: %s, units: %s", descriptor.getName, descriptor.getTitle, descriptor.getValueType, descriptor.getUnits)
 
