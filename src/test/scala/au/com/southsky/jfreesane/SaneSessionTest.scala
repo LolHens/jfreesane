@@ -66,7 +66,7 @@ import scala.collection.JavaConversions._
 
     try {
       device.open
-      assertThat(device.getOptionGroups).isNotEmpty
+      Truth.assertThat(java.lang.Boolean.valueOf(device.optionGroups.nonEmpty)).isTrue()
     } finally {
       device.close
     }
@@ -150,7 +150,7 @@ import scala.collection.JavaConversions._
 
     try {
       device.open
-      val modeOption: SaneOption = device.getOption("mode")
+      val modeOption: SaneOption = device.option("mode")
       assertThat(modeOption.stringValue = "Gray").isEqualTo("Gray")
     } finally {
       device.close
@@ -162,8 +162,8 @@ import scala.collection.JavaConversions._
   def adfAcquisitionSucceeds = {
     val device: SaneDevice = session.getDevice("test")
     device.open
-    Truth.assertThat(device.getOption("source").stringConstraints: util.List[String]).contains("Automatic Document Feeder")
-    device.getOption("source").stringValue = "Automatic Document Feeder"
+    Truth.assertThat(device.option("source").stringConstraints: util.List[String]).contains("Automatic Document Feeder")
+    device.option("source").stringValue = "Automatic Document Feeder"
 
     def loop: Unit =
       for (i <- 0 until 20)
@@ -186,8 +186,8 @@ import scala.collection.JavaConversions._
   def acquireImageSucceedsAfterOutOfPaperCondition = {
     val device: SaneDevice = session.getDevice("test")
     device.open
-    assertThat(device.getOption("source").stringConstraints: util.List[String]).has.item("Automatic Document Feeder")
-    device.getOption("source").stringValue = "Automatic Document Feeder"
+    assertThat(device.option("source").stringConstraints: util.List[String]).has.item("Automatic Document Feeder")
+    device.option("source").stringValue = "Automatic Document Feeder"
 
     var thrown: Boolean = false
     for (i <- 0 until 20)
@@ -213,7 +213,7 @@ import scala.collection.JavaConversions._
 
     try {
       device.open
-      val modeOption: SaneOption = device.getOption("mode")
+      val modeOption: SaneOption = device.option("mode")
       assertEquals("Gray", modeOption.stringValue = "Gray")
       val image: BufferedImage = device.acquireImage
 
@@ -236,8 +236,8 @@ import scala.collection.JavaConversions._
     // Solid black and white
     try {
       device.open
-      device.getOption("br-x").fixedValue = 200
-      device.getOption("br-y").fixedValue = 200
+      device.option("br-x").fixedValue = 200
+      device.option("br-y").fixedValue = 200
 
       /*
        * assertProducesCorrectImage(device, "Gray", 1, "Solid white");
@@ -278,10 +278,10 @@ import scala.collection.JavaConversions._
 
     try {
       device.open
-      assertThat(device.getOption("mode").stringValue(Charsets.US_ASCII)).matches("Gray|Color")
-      assertThat(device.getOption("mode").stringValue = "Gray").isEqualTo("Gray")
-      assertThat(device.getOption("mode").stringValue(Charsets.US_ASCII)).isEqualTo("Gray")
-      assertThat(device.getOption("read-return-value").stringValue(Charsets.US_ASCII)).isEqualTo("Default")
+      assertThat(device.option("mode").stringValue(Charsets.US_ASCII)).matches("Gray|Color")
+      assertThat(device.option("mode").stringValue = "Gray").isEqualTo("Gray")
+      assertThat(device.option("mode").stringValue(Charsets.US_ASCII)).isEqualTo("Gray")
+      assertThat(device.option("read-return-value").stringValue(Charsets.US_ASCII)).isEqualTo("Default")
     } finally {
       device.close
     }
@@ -296,8 +296,8 @@ import scala.collection.JavaConversions._
       device.open
 
       // this option gets rounded to the nearest whole number by the backend
-      assertEquals(123, device.getOption("br-x").fixedValue = 123.456, 0.0001)
-      assertEquals(123, device.getOption("br-x").fixedValue, 0.0001)
+      assertEquals(123, device.option("br-x").fixedValue = 123.456, 0.0001)
+      assertEquals(123, device.option("br-x").fixedValue, 0.0001)
     } finally {
       device.close
     }
@@ -311,7 +311,7 @@ import scala.collection.JavaConversions._
     try {
       device.open
 
-      val option: SaneOption = device.getOption("hand-scanner")
+      val option: SaneOption = device.option("hand-scanner")
       assertThat(java.lang.Boolean.valueOf(option.booleanValue = true)).isTrue
       assertThat(java.lang.Boolean.valueOf(option.booleanValue)).isTrue
       assertThat(java.lang.Boolean.valueOf(option.booleanValue = false)).isFalse
@@ -329,7 +329,7 @@ import scala.collection.JavaConversions._
     try {
       device.open
 
-      val option: SaneOption = device.getOption("string-constraint-string-list")
+      val option: SaneOption = device.option("string-constraint-string-list")
       Truth2.assertThat(option).isNotNull
       Truth2.assertThat(option.constraintType).isEqualTo(OptionValueConstraintType.STRING_LIST_CONSTRAINT)
       assertThat(option.stringConstraints: util.List[String]).has.exactly("First entry", "Second entry", "This is the very long third entry. Maybe the frontend has an idea how to display it")
@@ -346,7 +346,7 @@ import scala.collection.JavaConversions._
     try {
       device.open
 
-      val option: SaneOption = device.getOption("int-constraint-word-list")
+      val option: SaneOption = device.option("int-constraint-word-list")
       assertNotNull(option)
       assertEquals(OptionValueConstraintType.VALUE_LIST_CONSTRAINT, option.constraintType)
       assertEquals(ImmutableList.of(-42, -8, 0, 17, 42, 256, 65536, 16777216, 1073741824), option.integerValueListConstraint)
@@ -363,7 +363,7 @@ import scala.collection.JavaConversions._
     try {
       device.open
 
-      val option: SaneOption = device.getOption("fixed-constraint-word-list")
+      val option: SaneOption = device.option("fixed-constraint-word-list")
       assertNotNull(option)
       assertEquals(OptionValueConstraintType.VALUE_LIST_CONSTRAINT, option.constraintType)
       val expected: List[Double] = List(-32.7d, 12.1d, 42d, 129.5d)
@@ -385,7 +385,7 @@ import scala.collection.JavaConversions._
     try {
       device.open
 
-      val option: SaneOption = device.getOption("int-constraint-range")
+      val option: SaneOption = device.option("int-constraint-range")
       assertNotNull(option)
       assertEquals(OptionValueConstraintType.RANGE_CONSTRAINT, option.constraintType)
       assertEquals(4, option.rangeConstraints.minInt)
@@ -404,7 +404,7 @@ import scala.collection.JavaConversions._
     try {
       device.open
 
-      val option: SaneOption = device.getOption("fixed-constraint-range")
+      val option: SaneOption = device.option("fixed-constraint-range")
       assertNotNull(option)
       assertEquals(OptionValueConstraintType.RANGE_CONSTRAINT, option.constraintType)
       assertEquals(-42.17, option.rangeConstraints.minFixed, 0.00001)
@@ -423,7 +423,7 @@ import scala.collection.JavaConversions._
     try {
       device.open
 
-      val option: SaneOption = device.getOption("gamma-table")
+      val option: SaneOption = device.option("gamma-table")
       assertNotNull(option)
       //      assertFalse(option.isConstrained());
       assertEquals(OptionValueType.INT, option.`type`)
@@ -447,7 +447,7 @@ import scala.collection.JavaConversions._
     try {
       device.open
 
-      val option: SaneOption = device.getOption("tl-x")
+      val option: SaneOption = device.option("tl-x")
       assertNotNull(option)
       assertEquals(OptionValueConstraintType.RANGE_CONSTRAINT, option.constraintType)
       assertEquals(OptionValueType.FIXED, option.`type`)
@@ -498,9 +498,9 @@ import scala.collection.JavaConversions._
     try {
       device.open
 
-      device.getOption("button-update").setButtonValue
-      assertEquals("Gray", device.getOption("mode").stringValue = "Gray")
-      assertEquals("Gray", device.getOption("mode").stringValue)
+      device.option("button-update").setButtonValue
+      assertEquals("Gray", device.option("mode").stringValue = "Gray")
+      assertEquals("Gray", device.option("mode").stringValue)
     } finally {
       device.close
     }
@@ -514,7 +514,7 @@ import scala.collection.JavaConversions._
     try {
       device.open
 
-      device.getOption("hand-scanner").booleanValue = true
+      device.option("hand-scanner").booleanValue = true
       device.acquireImage
     } finally {
       device.close
@@ -529,9 +529,9 @@ import scala.collection.JavaConversions._
     try {
       device.open
 
-      assertEquals("Color pattern", device.getOption("test-picture").stringValue = "Color pattern")
-      assertEquals("Color", device.getOption("mode").stringValue = "Color")
-      assertEquals(true, device.getOption("three-pass").booleanValue = true)
+      assertEquals("Color pattern", device.option("test-picture").stringValue = "Color pattern")
+      assertEquals("Color", device.option("mode").stringValue = "Color")
+      assertEquals(true, device.option("three-pass").booleanValue = true)
 
       for (i <- 0 until 5) {
         val file = File.createTempFile("three-pass", ".png")
@@ -551,12 +551,12 @@ import scala.collection.JavaConversions._
     try {
       device.open
 
-      device.getOption("mode").stringValue = "Color"
-      device.getOption("resolution").integerValue = 200
-      device.getOption("tl-x").fixedValue = 0.0
-      device.getOption("tl-y").fixedValue = 0.0
-      device.getOption("br-x").fixedValue = 105.0
-      device.getOption("br-y").fixedValue = 149.0
+      device.option("mode").stringValue = "Color"
+      device.option("resolution").integerValue = 200
+      device.option("tl-x").fixedValue = 0.0
+      device.option("tl-y").fixedValue = 0.0
+      device.option("br-x").fixedValue = 105.0
+      device.option("br-y").fixedValue = 149.0
       device.acquireImage
     } finally {
       device.close
@@ -600,8 +600,8 @@ import scala.collection.JavaConversions._
   def highResolutionScan = {
     val device: SaneDevice = session.getDevice("pixma")
     device.open
-    device.getOption("resolution").integerValue = 1200
-    device.getOption("mode").stringValue = "Color"
+    device.option("resolution").integerValue = 1200
+    device.option("mode").stringValue = "Color"
     device.acquireImage
   }
 
@@ -635,9 +635,9 @@ import scala.collection.JavaConversions._
 
     val device: SaneDevice = session.getDevice("test")
     device.open
-    device.getOption("resolution").fixedValue = 1200
-    device.getOption("mode").stringValue = "Color"
-    device.getOption("three-pass").booleanValue = true
+    device.option("resolution").fixedValue = 1200
+    device.option("mode").stringValue = "Color"
+    device.option("three-pass").booleanValue = true
     device.acquireImage(listener)
     Truth2.assertThat(notifiedDevice.get()).isSameAs(device)
     Truth2.assertThat(frameCount.get()).isEqualTo(3)
@@ -685,9 +685,9 @@ import scala.collection.JavaConversions._
   @throws[IOException]
   @throws[SaneException]
   private def acquireImage(device: SaneDevice, mode: String, sampleDepth: Int, testPicture: String): BufferedImage = {
-    device.getOption("mode").stringValue = mode
-    device.getOption("depth").integerValue = sampleDepth
-    device.getOption("test-picture").stringValue = testPicture
+    device.option("mode").stringValue = mode
+    device.option("depth").integerValue = sampleDepth
+    device.option("test-picture").stringValue = testPicture
     return device.acquireImage
   }
 

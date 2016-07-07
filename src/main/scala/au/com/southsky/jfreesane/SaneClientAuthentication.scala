@@ -4,7 +4,7 @@ import java.io._
 import java.util
 import java.util.logging.{Level, Logger}
 
-import com.google.common.base.{Charsets, Joiner, Splitter}
+import com.google.common.base.{Charsets, Joiner}
 import com.google.common.collect.{HashBasedTable, Table}
 import com.google.common.io.{CharSource, CharStreams, LineProcessor}
 
@@ -119,11 +119,11 @@ object SaneClientAuthentication {
 
   object ClientCredential {
     def fromAuthString(authString: String): SaneClientAuthentication.ClientCredential = {
-      val fields: util.List[String] = Splitter.on(":").splitToList(authString)
+      val fields = authString.split(":")
       if (fields.size < 3)
         null
       else
-        new SaneClientAuthentication.ClientCredential(fields.get(2), fields.get(0), fields.get(1))
+        new SaneClientAuthentication.ClientCredential(fields(2), fields(0), fields(1))
     }
   }
 

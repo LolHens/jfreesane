@@ -188,7 +188,7 @@ class SaneOption private[jfreesane](val device: SaneDevice,
     Preconditions.checkState(isReadable, "option is not readable": Object)
     Preconditions.checkState(isActive, "option is not active": Object)
 
-    val out: SaneOutputStream = device.getSession.getOutputStream
+    val out: SaneOutputStream = device.session.getOutputStream
     out.write(SaneRpcCode.SANE_NET_CONTROL_OPTION)
     out.write(device.getHandle.handle)
     out.write(SaneWord.forInt(optionNumber))
@@ -212,7 +212,7 @@ class SaneOption private[jfreesane](val device: SaneDevice,
       out.write(0); // why do we need to provide a value buffer in an RPC call ???
 
     //read result
-    SaneOption.ControlOptionResult.fromSession(device.getSession)
+    SaneOption.ControlOptionResult.fromSession(device.session)
   }
 
   /**
@@ -346,7 +346,7 @@ class SaneOption private[jfreesane](val device: SaneDevice,
     Preconditions.checkState(isWriteable, "option is not writeable": Object)
     Preconditions.checkState(isActive, "option is not active": Object)
 
-    val out: SaneOutputStream = device.getSession.getOutputStream
+    val out: SaneOutputStream = device.session.getOutputStream
     out.write(SaneRpcCode.SANE_NET_CONTROL_OPTION)
     out.write(device.getHandle.handle)
     out.write(SaneWord.forInt(optionNumber))
@@ -377,7 +377,7 @@ class SaneOption private[jfreesane](val device: SaneDevice,
   @throws[SaneException]
   private def writeOption(value: String): SaneOption.ControlOptionResult = {
     Preconditions.checkState(valueType eq OptionValueType.STRING)
-    val out: SaneOutputStream = device.getSession.getOutputStream
+    val out: SaneOutputStream = device.session.getOutputStream
     out.write(SaneRpcCode.SANE_NET_CONTROL_OPTION)
     out.write(SaneWord.forInt(device.getHandle.handle.integerValue))
     out.write(SaneWord.forInt(this.optionNumber))
@@ -404,7 +404,7 @@ class SaneOption private[jfreesane](val device: SaneDevice,
     Preconditions.checkState(isWriteable, "option %s is not writeable", name)
     Preconditions.checkState(valueType eq OptionValueType.INT, "option %s is %s-typed, you must use the corresponding methods to set the value", name, valueType)
 
-    val out: SaneOutputStream = device.getSession.getOutputStream
+    val out: SaneOutputStream = device.session.getOutputStream
     out.write(SaneRpcCode.SANE_NET_CONTROL_OPTION)
     out.write(device.getHandle.handle)
     out.write(SaneWord.forInt(optionNumber))
@@ -425,7 +425,7 @@ class SaneOption private[jfreesane](val device: SaneDevice,
   private def writeButtonOption: SaneOption.ControlOptionResult = {
     Preconditions.checkState(valueType eq OptionValueType.BUTTON)
 
-    val out: SaneOutputStream = device.getSession.getOutputStream
+    val out: SaneOutputStream = device.session.getOutputStream
     out.write(SaneRpcCode.SANE_NET_CONTROL_OPTION)
     out.write(device.getHandle.handle)
     out.write(SaneWord.forInt(this.optionNumber))
@@ -440,7 +440,7 @@ class SaneOption private[jfreesane](val device: SaneDevice,
   @throws[IOException]
   @throws[SaneException]
   private def handleWriteResponse: SaneOption.ControlOptionResult = {
-    val result: SaneOption.ControlOptionResult = SaneOption.ControlOptionResult.fromSession(device.getSession)
+    val result: SaneOption.ControlOptionResult = SaneOption.ControlOptionResult.fromSession(device.session)
 
     if (result.info.contains(SaneOption.OptionWriteInfo.RELOAD_OPTIONS))
       device.invalidateOptions
@@ -562,10 +562,10 @@ object SaneOption {
   }
 
   @throws[IOException]
-  def optionsFor(device: SaneDevice): util.List[SaneOption] = {
+  def optionsFor(device: SaneDevice): List[SaneOption] = {
     Preconditions.checkState(device.isOpen, "you must open() the device first": Object)
-    val options: util.List[SaneOption] = Lists.newArrayList()
-    val session: SaneSession = device.getSession
+    var options = List[SaneOption]()
+    val session: SaneSession = device.session
     val inputStream: SaneInputStream = session.getInputStream
     val outputStream: SaneOutputStream = session.getOutputStream
 
@@ -578,26 +578,27 @@ object SaneOption {
     // first word of response is number of option entries
     val length: Int = inputStream.readWord.integerValue - 1
     if (length <= 0)
-      return ImmutableList.of()
+      Nil
+    else {
+      for (i <- 0 to length) {
+        val option = SaneOption.fromStream(inputStream, device, i)
 
-    for (i <- 0 to length) {
-      val option = SaneOption.fromStream(inputStream, device, i)
-
-      if (option.valueType == OptionValueType.GROUP) {
-        device.addOptionGroup(option.group)
-      } else {
-        // http://code.google.com/p/jfreesane/issues/detail?id=1
-        // The first option always has an empty name. Sometimes we see options after the first option
-        // that have empty names. Elsewhere we assume that option names are unique, so this option is
-        // omitted
-        if (i > 0 && Strings.isNullOrEmpty(option.name)) {
-          logger.fine(s"ignoring null or empty option with id $i: $option")
-        } else
-          options.add(option)
+        if (option.valueType == OptionValueType.GROUP) {
+          device.addOptionGroup(option.group)
+        } else {
+          // http://code.google.com/p/jfreesane/issues/detail?id=1
+          // The first option always has an empty name. Sometimes we see options after the first option
+          // that have empty names. Elsewhere we assume that option names are unique, so this option is
+          // omitted
+          if (i > 0 && Strings.isNullOrEmpty(option.name)) {
+            logger.fine(s"ignoring null or empty option with id $i: $option")
+          } else
+            options = options :+ option
+        }
       }
-    }
 
-    options
+      options
+    }
   }
 
   @throws[IOException]

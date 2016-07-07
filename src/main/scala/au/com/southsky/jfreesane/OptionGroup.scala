@@ -9,7 +9,7 @@ import com.google.common.base.{MoreObjects, Preconditions}
   * @author James Ring (sjr@jdns.org)
   */
 class OptionGroup(val title: String) {
-  private var _options: List[SaneOption] = Nil
+  private var _options = List[SaneOption]()
 
   /**
     * Returns an immutable copy of the options in this group.

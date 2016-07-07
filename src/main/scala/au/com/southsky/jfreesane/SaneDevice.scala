@@ -2,10 +2,8 @@ package au.com.southsky.jfreesane
 
 import java.awt.image.BufferedImage
 import java.io.{Closeable, IOException}
-import java.util
 
-import com.google.common.base.{Function, Preconditions}
-import com.google.common.collect.{ImmutableList, Lists, Maps}
+import com.google.common.base.Preconditions
 
 /**
   * Represents a SANE device within a session. SANE devices are obtained from a {@link SaneSession}.
@@ -24,8 +22,8 @@ class SaneDevice private[jfreesane](val session: SaneSession,
                                     val `type`: String) extends Closeable {
 
   private var handle: SaneDeviceHandle = null
-  private var optionTitleMap: util.Map[String, SaneOption] = null
-  private val groups: util.List[OptionGroup] = Lists.newArrayList()
+  private var optionTitleMap: Option[Map[String, SaneOption]] = None
+  private var groups = List[OptionGroup]()
 
   def getName: String = name
 
@@ -134,27 +132,25 @@ class SaneDevice private[jfreesane](val session: SaneSession,
     * @throws IOException if a problem occurred talking to the SANE backend
     */
   @throws[IOException]
-  def listOptions: util.List[SaneOption] = {
-    if (optionTitleMap == null) {
-      groups.clear()
-      optionTitleMap = Maps.uniqueIndex(SaneOption.optionsFor(this), new Function[SaneOption, String]() {
-        def apply(input: SaneOption): String = input.name
-      })
-    }
+  def listOptions: List[SaneOption] = optionTitleMap.getOrElse {
+    groups = Nil
 
-    // Maps.uniqueIndex guarantees the order of optionTitleMap.values()
-    ImmutableList.copyOf(optionTitleMap.values.iterator())
-  }
+    val result = SaneOption.optionsFor(this)
+      .map(saneOption => (saneOption.name, saneOption))
+      .toMap
+    optionTitleMap = Some(result)
+    result
+  }.values.toList
 
-  private[jfreesane] def addOptionGroup(group: OptionGroup) = groups.add(group)
+  private[jfreesane] def addOptionGroup(group: OptionGroup) = groups = groups :+ group
 
   /**
     * Returns the list of option groups for this device.
     */
   @throws[IOException]
-  def getOptionGroups: util.List[OptionGroup] = {
+  def optionGroups: List[OptionGroup] = {
     listOptions
-    ImmutableList.copyOf(groups.iterator())
+    groups
   }
 
   /**
@@ -162,16 +158,14 @@ class SaneDevice private[jfreesane](val session: SaneSession,
     * not exist, {@code null} is returned. Name matching is case-sensitive.
     */
   @throws[IOException]
-  def getOption(title: String): SaneOption = {
+  def option(title: String): SaneOption = {
     listOptions
-    optionTitleMap.get(title)
+    optionTitleMap.flatMap(_.get(title)).get
   }
-
-  private[jfreesane] def getSession: SaneSession = session
 
   /**
     * Informs this device that its options are stale (e.g. when the server tells us we need to reload
     * options after an option was set).
     */
-  private[jfreesane] def invalidateOptions = optionTitleMap = null
+  private[jfreesane] def invalidateOptions = optionTitleMap = None
 }
