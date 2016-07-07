@@ -31,7 +31,7 @@ object SaneStatus extends SaneEnumObject[SaneStatus] {
 
   object STATUS_ACCESS_DENIED extends SaneStatus(11)
 
-  def fromWireValue(wireValue: Int): SaneStatus = SaneEnums.valueOf(classOf[SaneStatus], wireValue)
+  def fromWireValue(wireValue: Int): SaneStatus = SaneStatus(wireValue)
 
   def fromWireValue(statusWord: SaneWord): SaneStatus = fromWireValue(statusWord.integerValue)
 

@@ -612,7 +612,7 @@ object SaneOption {
                             val resource: String) {
 
     val info: Set[SaneOption.OptionWriteInfo] =
-      SaneEnums.enumSet[SaneOption.OptionWriteInfo](classOf[SaneOption.OptionWriteInfo], _info)
+      SaneOption.OptionWriteInfo.enumSet(_info)
   }
 
   object ControlOptionResult {
@@ -628,7 +628,7 @@ object SaneOption {
 
       var info: Int = stream.readWord.integerValue
 
-      var `type`: OptionValueType = SaneEnums.valueOf(classOf[OptionValueType], stream.readWord.integerValue)
+      var `type`: OptionValueType = OptionValueType(stream.readWord.integerValue)
 
       var valueSize: Int = stream.readWord.integerValue
 
@@ -656,7 +656,7 @@ object SaneOption {
 
         info = stream.readWord.integerValue
 
-        `type` = SaneEnums.valueOf(classOf[OptionValueType], stream.readWord.integerValue)
+        `type` = OptionValueType(stream.readWord.integerValue)
 
         valueSize = stream.readWord.integerValue
 

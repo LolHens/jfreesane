@@ -137,7 +137,7 @@ class SaneInputStream(val saneSession: SaneSession,
     val optionDescription: String = readString
     val typeInt: Int = readWord.integerValue
     // TODO: range check here
-    val valueType: OptionValueType = SaneEnums.valueOf(classOf[OptionValueType], typeInt)
+    val valueType: OptionValueType = OptionValueType(typeInt)
 
     if (valueType eq OptionValueType.GROUP)
     // a new group applies!
@@ -145,7 +145,7 @@ class SaneInputStream(val saneSession: SaneSession,
 
     val unitsInt: Int = readWord.integerValue
     // TODO: range check here
-    val units: SaneOption.OptionUnits = SaneEnums.valueOf(classOf[SaneOption.OptionUnits], unitsInt)
+    val units: SaneOption.OptionUnits = SaneOption.OptionUnits(unitsInt)
 
     val size: Int = readWord.integerValue
 
@@ -154,7 +154,7 @@ class SaneInputStream(val saneSession: SaneSession,
     val capabilityWord: Int = readWord.integerValue
     val constraintTypeInt: Int = readWord.integerValue
     // TODO: range check here
-    val constraintType: OptionValueConstraintType = SaneEnums.valueOf(classOf[OptionValueConstraintType], constraintTypeInt)
+    val constraintType: OptionValueConstraintType = OptionValueConstraintType(constraintTypeInt)
 
     // decode the constraint
 
@@ -211,7 +211,7 @@ class SaneInputStream(val saneSession: SaneSession,
         throw new IllegalStateException("Unknown constraint type")
     }
 
-    new SaneOptionDescriptor(optionName, optionTitle, optionDescription, currentGroup, valueType, units, size, SaneEnums.enumSet(classOf[OptionCapability], capabilityWord), constraintType, rangeConstraint, stringConstraints.toList, valueConstraints.toList)
+    new SaneOptionDescriptor(optionName, optionTitle, optionDescription, currentGroup, valueType, units, size, OptionCapability.enumSet(capabilityWord), constraintType, rangeConstraint, stringConstraints.toList, valueConstraints.toList)
   }
 }
 
