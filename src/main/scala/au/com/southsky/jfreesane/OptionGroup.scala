@@ -1,10 +1,6 @@
 package au.com.southsky.jfreesane
 
-import java.util
-
 import com.google.common.base.{MoreObjects, Preconditions}
-import com.google.common.collect.{ImmutableList, Lists}
-import scala.collection.JavaConversions._
 
 /**
   * Represents a group of options. The SANE backend may group options together. These may be handy
@@ -32,7 +28,7 @@ class OptionGroup(val title: String) {
 
   override def toString: String =
     MoreObjects.toStringHelper(this)
-    .add("title", title)
-    .add("options", _options)
-    .toString
+      .add("title", title)
+      .add("options", _options)
+      .toString
 }

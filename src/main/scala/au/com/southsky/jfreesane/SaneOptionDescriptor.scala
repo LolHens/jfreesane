@@ -1,6 +1,7 @@
 package au.com.southsky.jfreesane
 
 import java.util
+
 import scala.collection.JavaConversions._
 
 /**

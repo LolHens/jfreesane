@@ -3,10 +3,12 @@ package au.com.southsky.jfreesane
 import java.io.{IOException, InputStream}
 import java.util
 import java.util.logging.{Level, Logger}
-import scala.collection.JavaConversions._
+
 import com.google.common.base.Charsets
 import com.google.common.collect.{ImmutableList, Lists}
 import com.google.common.io.ByteStreams
+
+import scala.collection.JavaConversions._
 
 /**
   * Wraps an {@link InputStream} to provide some methods for deserializing SANE-related types.

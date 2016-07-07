@@ -8,7 +8,7 @@ import java.util
 import java.util.concurrent.atomic.{AtomicInteger, AtomicReference}
 import java.util.logging.{Level, Logger}
 import javax.imageio.ImageIO
-import scala.collection.JavaConversions._
+
 import com.google.common.base.Charsets
 import com.google.common.collect.{ImmutableList, Lists}
 import com.google.common.io.{Closeables, Files}
@@ -16,6 +16,8 @@ import com.google.common.truth.Truth
 import com.google.common.truth.Truth.assertThat
 import org.junit.Assert._
 import org.junit._
+
+import scala.collection.JavaConversions._
 
 /**
   * Tests JFreeSane's interactions with the backend.
@@ -100,7 +102,7 @@ import org.junit._
       for (option <- options) {
         System.out.println(option.toString)
 
-        if (option.`type` ne OptionValueType.tmp_button)
+        if (option.`type` ne OptionValueType.BUTTON)
           System.out.println(option.valueCount)
       }
     } finally {
@@ -129,9 +131,9 @@ import org.junit._
 
         if (!option.isActive)
           System.out.print(" [inactive]")
-        else if ((option.`type` eq OptionValueType.tmp_int) && option.valueCount == 1 && option.isActive)
+        else if ((option.`type` eq OptionValueType.INT) && option.valueCount == 1 && option.isActive)
           System.out.print("=" + option.integerValue)
-        else if (option.`type` eq OptionValueType.tmp_string)
+        else if (option.`type` eq OptionValueType.STRING)
           System.out.print("=" + option.stringValue(Charsets.US_ASCII))
 
         System.out.println()
@@ -329,7 +331,7 @@ import org.junit._
 
       val option: SaneOption = device.getOption("string-constraint-string-list")
       Truth2.assertThat(option).isNotNull
-      Truth2.assertThat(option.constraintType).isEqualTo(OptionValueConstraintType.tmp_stringList)
+      Truth2.assertThat(option.constraintType).isEqualTo(OptionValueConstraintType.STRING_LIST_CONSTRAINT)
       assertThat(option.stringConstraints: util.List[String]).has.exactly("First entry", "Second entry", "This is the very long third entry. Maybe the frontend has an idea how to display it")
     } finally {
       device.close
@@ -346,7 +348,7 @@ import org.junit._
 
       val option: SaneOption = device.getOption("int-constraint-word-list")
       assertNotNull(option)
-      assertEquals(OptionValueConstraintType.tmp_valueList, option.constraintType)
+      assertEquals(OptionValueConstraintType.VALUE_LIST_CONSTRAINT, option.constraintType)
       assertEquals(ImmutableList.of(-42, -8, 0, 17, 42, 256, 65536, 16777216, 1073741824), option.integerValueListConstraint)
     } finally {
       device.close
@@ -363,7 +365,7 @@ import org.junit._
 
       val option: SaneOption = device.getOption("fixed-constraint-word-list")
       assertNotNull(option)
-      assertEquals(OptionValueConstraintType.tmp_valueList, option.constraintType)
+      assertEquals(OptionValueConstraintType.VALUE_LIST_CONSTRAINT, option.constraintType)
       val expected: List[Double] = List(-32.7d, 12.1d, 42d, 129.5d)
       val actual: List[Double] = option.fixedValueListConstraint
       assertEquals(expected.size, actual.size)
@@ -385,7 +387,7 @@ import org.junit._
 
       val option: SaneOption = device.getOption("int-constraint-range")
       assertNotNull(option)
-      assertEquals(OptionValueConstraintType.tmp_range, option.constraintType)
+      assertEquals(OptionValueConstraintType.RANGE_CONSTRAINT, option.constraintType)
       assertEquals(4, option.rangeConstraints.minInt)
       assertEquals(192, option.rangeConstraints.maxInt)
       assertEquals(2, option.rangeConstraints.quantumInt)
@@ -404,7 +406,7 @@ import org.junit._
 
       val option: SaneOption = device.getOption("fixed-constraint-range")
       assertNotNull(option)
-      assertEquals(OptionValueConstraintType.tmp_range, option.constraintType)
+      assertEquals(OptionValueConstraintType.RANGE_CONSTRAINT, option.constraintType)
       assertEquals(-42.17, option.rangeConstraints.minFixed, 0.00001)
       assertEquals(32767.9999, option.rangeConstraints.maxFixed, 0.00001)
       assertEquals(2.0, option.rangeConstraints.quantumFixed, 0.00001)
@@ -424,7 +426,7 @@ import org.junit._
       val option: SaneOption = device.getOption("gamma-table")
       assertNotNull(option)
       //      assertFalse(option.isConstrained());
-      assertEquals(OptionValueType.tmp_int, option.`type`)
+      assertEquals(OptionValueType.INT, option.`type`)
       val values: util.List[Integer] = Lists.newArrayList()
 
       for (i <- 0 until option.valueCount)
@@ -447,8 +449,8 @@ import org.junit._
 
       val option: SaneOption = device.getOption("tl-x")
       assertNotNull(option)
-      assertEquals(OptionValueConstraintType.tmp_range, option.constraintType)
-      assertEquals(OptionValueType.tmp_fixed, option.`type`)
+      assertEquals(OptionValueConstraintType.RANGE_CONSTRAINT, option.constraintType)
+      assertEquals(OptionValueType.FIXED, option.`type`)
       val constraint: RangeConstraint = option.rangeConstraints
 
       System.out.println(constraint.minFixed)
@@ -586,7 +588,7 @@ import org.junit._
       fail("Expected a SaneException, didn't get one")
     } catch {
       case e: SaneException =>
-        if (e.getStatus ne SaneStatus.tmp_STATUS_ACCESS_DENIED)
+        if (e.getStatus ne SaneStatus.STATUS_ACCESS_DENIED)
           throw e
 
       // if we got here, we got the expected exception

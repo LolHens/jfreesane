@@ -462,9 +462,9 @@ object SaneOption {
 
   object OptionAction extends SaneEnumObject[OptionAction] {
 
-    object GET_VALUE extends OptionAction( 0)
+    object GET_VALUE extends OptionAction(0)
 
-    object SET_VALUE extends OptionAction( 1)
+    object SET_VALUE extends OptionAction(1)
 
     object SET_AUTO extends OptionAction(2)
 

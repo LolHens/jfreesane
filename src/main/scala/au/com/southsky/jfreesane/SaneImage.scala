@@ -3,29 +3,33 @@ package au.com.southsky.jfreesane
 import java.awt.color.ColorSpace
 import java.awt.image._
 import java.awt.{Point, Transparency}
-import java.util
 
 import au.com.southsky.jfreesane.SaneImage._
-import com.google.common.base.{Function, Preconditions}
-import com.google.common.collect.{Lists, Ordering, Sets}
+import com.google.common.base.Preconditions
 
 /**
   * Represents a SANE image, which are composed of one or more {@link Frame frames}.
   */
-class SaneImage private(_frames: util.List[Frame],
+class SaneImage private(_frames: List[Frame],
                         val depthPerPixel: Int,
                         val width: Int,
                         val height: Int,
                         val bytesPerLine: Int) {
-
   // this ensures that in the 3-frame situation, they are always
   // arranged in the following order: red, green, blue
-  private val frames: util.List[Frame] =
-    Ordering.explicit(FrameType.RED, FrameType.GREEN, FrameType.BLUE, FrameType.RGB, FrameType.GRAY)
-      .onResultOf(
-        new Function[Frame, FrameType]() {
-          def apply(input: Frame): FrameType = input.`type`
-        }).immutableSortedCopy(_frames)
+  private val frames: List[Frame] = {
+    val order = List(
+      FrameType.RED,
+      FrameType.GREEN,
+      FrameType.BLUE,
+      FrameType.RGB,
+      FrameType.GRAY
+    )
+
+    def ordinal(frameType: FrameType) = order.indexOf(frameType)
+
+    _frames.sortBy(frame => ordinal(frame.`type`))
+  }
 
   private[jfreesane] def toBufferedImage: BufferedImage = {
     val buffer: DataBuffer = asDataBuffer
@@ -46,7 +50,7 @@ class SaneImage private(_frames: util.List[Frame],
 
     // Otherwise we're in a one-frame situation
     if (depthPerPixel == 1)
-      if (frames.get(0).`type` eq FrameType.GRAY)
+      if (frames(0).`type` == FrameType.GRAY)
         decodeSingleBitGrayscaleImage
       else
         decodeSingleBitColorImage
@@ -57,7 +61,7 @@ class SaneImage private(_frames: util.List[Frame],
 
       val bytesPerSample: Int = depthPerPixel / java.lang.Byte.SIZE
 
-      if (frames.get(0).`type` eq FrameType.GRAY) {
+      if (frames(0).`type` == FrameType.GRAY) {
         colorSpace = ColorSpace.getInstance(ColorSpace.CS_GRAY)
         bandOffsets = Array[Int](0)
       }
@@ -77,7 +81,7 @@ class SaneImage private(_frames: util.List[Frame],
   }
 
   private def decodeSingleBitGrayscaleImage: BufferedImage = {
-    val data: Array[Byte] = frames.get(0).data
+    val data: Array[Byte] = frames(0).data
     val image: BufferedImage = new BufferedImage(width, height, BufferedImage.TYPE_INT_RGB)
 
     for (y <- 0 until height)
@@ -95,7 +99,7 @@ class SaneImage private(_frames: util.List[Frame],
   }
 
   private def decodeSingleBitColorImage: BufferedImage = {
-    val data: Array[Byte] = frames.get(0).data
+    val data: Array[Byte] = frames(0).data
     val image: BufferedImage = new BufferedImage(width, height, BufferedImage.TYPE_INT_RGB)
 
     val componentCount: Int = 3 // red, green, blue. One bit per sample, byte interleaved
@@ -123,35 +127,35 @@ class SaneImage private(_frames: util.List[Frame],
   private def asDataBuffer: DataBuffer = {
     val buffers: Array[Array[Byte]] = new Array[Array[Byte]](frames.size)
 
-    for (i <- 0 until frames.size())
-      buffers(i) = frames.get(i).data
+    for (i <- frames.indices)
+      buffers(i) = frames(i).data
 
-    new DataBufferByte(buffers, frames.get(0).data.length)
+    new DataBufferByte(buffers, frames(0).data.length)
   }
 }
 
 object SaneImage {
-  private val singletonFrameTypes: util.Set[FrameType] = Sets.immutableEnumSet(FrameType.GRAY, FrameType.RGB)
-  private val redGreenBlueFrameTypes: util.Set[FrameType] = Sets.immutableEnumSet(FrameType.RED, FrameType.GREEN, FrameType.BLUE)
+  private val singletonFrameTypes = Set(FrameType.GRAY, FrameType.RGB)
+  private val redGreenBlueFrameTypes = Set(FrameType.RED, FrameType.GREEN, FrameType.BLUE)
 
   class Builder {
-    final private val frames: util.List[Frame] = Lists.newArrayList()
-    final private val frameTypes: util.Set[FrameType] = util.EnumSet.noneOf(classOf[FrameType])
-    final private val depthPerPixel: WriteOnce[Integer] = new WriteOnce[Integer]
-    final private val width: WriteOnce[Integer] = new WriteOnce[Integer]
-    final private val height: WriteOnce[Integer] = new WriteOnce[Integer]
-    final private val bytesPerLine: WriteOnce[Integer] = new WriteOnce[Integer]
+    private var frames = List[Frame]()
+    private var frameTypes = Set[FrameType]()
+    private val depthPerPixel: WriteOnce[Integer] = new WriteOnce[Integer]
+    private val width: WriteOnce[Integer] = new WriteOnce[Integer]
+    private val height: WriteOnce[Integer] = new WriteOnce[Integer]
+    private val bytesPerLine: WriteOnce[Integer] = new WriteOnce[Integer]
 
     def addFrame(frame: Frame) {
       Preconditions.checkArgument(!frameTypes.contains(frame.`type`), "Image already contains a frame of this type": Object)
       Preconditions.checkArgument(frameTypes.isEmpty || !singletonFrameTypes.contains(frame.`type`), "The frame type is singleton but this image " + "contains another frame": Object)
-      Preconditions.checkArgument(frames.isEmpty || frames.get(0).data.length == frame.data.length, "new frame has an inconsistent size": Object)
+      Preconditions.checkArgument(frames.isEmpty || frames(0).data.length == frame.data.length, "new frame has an inconsistent size": Object)
       setPixelDepth(frame.pixelDepth)
       setBytesPerLine(frame.bytesPerLine)
       setWidth(frame.width)
       setHeight(frame.height)
-      frameTypes.add(frame.`type`)
-      frames.add(frame)
+      frameTypes = frameTypes + frame.`type`
+      frames = frames :+ frame
     }
 
     def setPixelDepth(depthPerPixel: Int) {
@@ -175,11 +179,11 @@ object SaneImage {
       Preconditions.checkState(bytesPerLine.get != null, "setBytesPerLine must be called": Object)
 
       // does the image contains a single instance of a singleton frame?
-      if (frames.size == 1 && singletonFrameTypes.contains(frames.get(0).`type`))
+      if (frames.size == 1 && singletonFrameTypes.contains(frames(0).`type`))
         new SaneImage(frames, depthPerPixel.get, width.get, height.get, bytesPerLine.get)
 
       // otherwise, does it contain a red, green and blue frame?
-      else if (frames.size == redGreenBlueFrameTypes.size && redGreenBlueFrameTypes.containsAll(frameTypes))
+      else if (frames.size == redGreenBlueFrameTypes.size && frameTypes.forall(redGreenBlueFrameTypes.contains))
         new SaneImage(frames, depthPerPixel.get, width.get, height.get, bytesPerLine.get)
       else
         throw new IllegalStateException("Image is not fully constructed. Frame types present: " + frameTypes)
