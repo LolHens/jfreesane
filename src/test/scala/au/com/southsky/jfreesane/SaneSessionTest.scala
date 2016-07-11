@@ -50,7 +50,7 @@ import scala.collection.JavaConversions._
   @Test
   @throws[Exception]
   def openDeviceSucceeds = {
-    val device: SaneDevice = session.getDevice("test")
+    val device: SaneDevice = session.device("test")
 
     try {
       device.open
@@ -62,7 +62,7 @@ import scala.collection.JavaConversions._
   @Test
   @throws[Exception]
   def optionGroupsArePopulated = {
-    val device: SaneDevice = session.getDevice("test")
+    val device: SaneDevice = session.device("test")
 
     try {
       device.open
@@ -75,7 +75,7 @@ import scala.collection.JavaConversions._
   @Test
   @throws[Exception]
   def imageAcquisitionSucceeds = {
-    val device: SaneDevice = session.getDevice("test")
+    val device: SaneDevice = session.device("test")
 
     try {
       device.open
@@ -91,7 +91,7 @@ import scala.collection.JavaConversions._
   @Test
   @throws[Exception]
   def listOptionsSucceeds = {
-    val device: SaneDevice = session.getDevice("pixma")
+    val device: SaneDevice = session.device("pixma")
     try {
       device.open
       val options: util.List[SaneOption] = device.listOptions
@@ -113,7 +113,7 @@ import scala.collection.JavaConversions._
   @Test
   @throws[Exception]
   def getOptionValueSucceeds = {
-    val device: SaneDevice = session.getDevice("test")
+    val device: SaneDevice = session.device("test")
     try {
       device.open
       val options: util.List[SaneOption] = device.listOptions
@@ -146,7 +146,7 @@ import scala.collection.JavaConversions._
   @Test
   @throws[Exception]
   def setOptionValueSucceedsForString = {
-    val device: SaneDevice = session.getDevice("test")
+    val device: SaneDevice = session.device("test")
 
     try {
       device.open
@@ -160,7 +160,7 @@ import scala.collection.JavaConversions._
   @Test
   @throws[Exception]
   def adfAcquisitionSucceeds = {
-    val device: SaneDevice = session.getDevice("test")
+    val device: SaneDevice = session.device("test")
     device.open
     Truth.assertThat(device.option("source").stringConstraints: util.List[String]).contains("Automatic Document Feeder")
     device.option("source").stringValue = "Automatic Document Feeder"
@@ -184,7 +184,7 @@ import scala.collection.JavaConversions._
   @Test
   @throws[Exception]
   def acquireImageSucceedsAfterOutOfPaperCondition = {
-    val device: SaneDevice = session.getDevice("test")
+    val device: SaneDevice = session.device("test")
     device.open
     assertThat(device.option("source").stringConstraints: util.List[String]).has.item("Automatic Document Feeder")
     device.option("source").stringValue = "Automatic Document Feeder"
@@ -209,7 +209,7 @@ import scala.collection.JavaConversions._
   @Test
   @throws[Exception]
   def acquireMonoImage = {
-    val device: SaneDevice = session.getDevice("test")
+    val device: SaneDevice = session.device("test")
 
     try {
       device.open
@@ -232,7 +232,7 @@ import scala.collection.JavaConversions._
   @Test
   @throws[Exception]
   def producesCorrectImages = {
-    val device: SaneDevice = session.getDevice("test")
+    val device: SaneDevice = session.device("test")
     // Solid black and white
     try {
       device.open
@@ -274,7 +274,7 @@ import scala.collection.JavaConversions._
   @Test
   @throws[Exception]
   def readsAndSetsStringsCorrectly = {
-    val device: SaneDevice = session.getDevice("test")
+    val device: SaneDevice = session.device("test")
 
     try {
       device.open
@@ -290,7 +290,7 @@ import scala.collection.JavaConversions._
   @Test
   @throws[Exception]
   def readsFixedPrecisionCorrectly = {
-    val device: SaneDevice = session.getDevice("test")
+    val device: SaneDevice = session.device("test")
 
     try {
       device.open
@@ -306,7 +306,7 @@ import scala.collection.JavaConversions._
   @Test
   @throws[Exception]
   def readsBooleanOptionsCorrectly = {
-    val device: SaneDevice = session.getDevice("test")
+    val device: SaneDevice = session.device("test")
 
     try {
       device.open
@@ -324,7 +324,7 @@ import scala.collection.JavaConversions._
   @Test
   @throws[Exception]
   def readsStringListConstraintsCorrectly = {
-    val device: SaneDevice = session.getDevice("test")
+    val device: SaneDevice = session.device("test")
 
     try {
       device.open
@@ -341,7 +341,7 @@ import scala.collection.JavaConversions._
   @Test
   @throws[Exception]
   def readIntegerValueListConstraintsCorrectly = {
-    val device: SaneDevice = session.getDevice("test")
+    val device: SaneDevice = session.device("test")
 
     try {
       device.open
@@ -358,7 +358,7 @@ import scala.collection.JavaConversions._
   @Test
   @throws[Exception]
   def readFixedValueListConstraintsCorrectly = {
-    val device: SaneDevice = session.getDevice("test")
+    val device: SaneDevice = session.device("test")
 
     try {
       device.open
@@ -380,7 +380,7 @@ import scala.collection.JavaConversions._
   @Test
   @throws[Exception]
   def readIntegerConstraintRangeCorrectly = {
-    val device: SaneDevice = session.getDevice("test")
+    val device: SaneDevice = session.device("test")
 
     try {
       device.open
@@ -399,7 +399,7 @@ import scala.collection.JavaConversions._
   @Test
   @throws[Exception]
   def readFixedConstraintRangeCorrectly = {
-    val device: SaneDevice = session.getDevice("test")
+    val device: SaneDevice = session.device("test")
 
     try {
       device.open
@@ -418,7 +418,7 @@ import scala.collection.JavaConversions._
   @Test
   @throws[Exception]
   def arrayOption = {
-    val device: SaneDevice = session.getDevice("pixma")
+    val device: SaneDevice = session.device("pixma")
 
     try {
       device.open
@@ -442,7 +442,7 @@ import scala.collection.JavaConversions._
   @Test
   @throws[Exception]
   def pixmaConstraints = {
-    val device: SaneDevice = session.getDevice("pixma")
+    val device: SaneDevice = session.device("pixma")
 
     try {
       device.open
@@ -473,19 +473,19 @@ import scala.collection.JavaConversions._
   @Test
   @throws[Exception]
   def multipleGetDeviceCalls = {
-    session.getDevice("test")
-    session.getDevice("test")
+    session.device("test")
+    session.device("test")
   }
 
   @Test
   @throws[Exception]
   def multipleOpenDeviceCalls = {
     {
-      val device: SaneDevice = session.getDevice("test")
+      val device: SaneDevice = session.device("test")
       openAndCloseDevice(device)
     }
     {
-      val device: SaneDevice = session.getDevice("test")
+      val device: SaneDevice = session.device("test")
       openAndCloseDevice(device)
     }
   }
@@ -493,7 +493,7 @@ import scala.collection.JavaConversions._
   @Test
   @throws[Exception]
   def canSetButtonOption = {
-    val device: SaneDevice = session.getDevice("pixma")
+    val device: SaneDevice = session.device("pixma")
 
     try {
       device.open
@@ -509,7 +509,7 @@ import scala.collection.JavaConversions._
   @Test
   @throws[Exception]
   def handScanning = {
-    val device: SaneDevice = session.getDevice("test")
+    val device: SaneDevice = session.device("test")
 
     try {
       device.open
@@ -524,7 +524,7 @@ import scala.collection.JavaConversions._
   @Test
   @throws[Exception]
   def threePassScanning = {
-    val device: SaneDevice = session.getDevice("test")
+    val device: SaneDevice = session.device("test")
 
     try {
       device.open
@@ -546,7 +546,7 @@ import scala.collection.JavaConversions._
   @Test
   @throws[Exception]
   def reducedArea = {
-    val device: SaneDevice = session.getDevice("test")
+    val device: SaneDevice = session.device("test")
 
     try {
       device.open
@@ -567,8 +567,8 @@ import scala.collection.JavaConversions._
   @throws[Exception]
   def passwordAuthentication = {
     // assumes that test is a password-authenticated device
-    session.setPasswordProvider(SanePasswordProvider.forUsernameAndPassword("sjr", "password"))
-    val device: SaneDevice = session.getDevice("test")
+    session.passwordProvider = SanePasswordProvider.forUsernameAndPassword("sjr", "password")
+    val device: SaneDevice = session.device("test")
     device.open
     device.acquireImage
   }
@@ -580,8 +580,8 @@ import scala.collection.JavaConversions._
   @Test
   @throws[Exception]
   def invalidPasswordCausesAccessDeniedError = {
-    session.setPasswordProvider(SanePasswordProvider.forUsernameAndPassword("sjr", "badpassword"))
-    val device: SaneDevice = session.getDevice("test")
+    session.passwordProvider = SanePasswordProvider.forUsernameAndPassword("sjr", "badpassword")
+    val device: SaneDevice = session.device("test")
 
     try {
       device.open
@@ -598,7 +598,7 @@ import scala.collection.JavaConversions._
   @Test
   @throws[Exception]
   def highResolutionScan = {
-    val device: SaneDevice = session.getDevice("pixma")
+    val device: SaneDevice = session.device("pixma")
     device.open
     device.option("resolution").integerValue = 1200
     device.option("mode").stringValue = "Color"
@@ -611,8 +611,8 @@ import scala.collection.JavaConversions._
     val passwordFile: File = File.createTempFile("sane", ".pass")
     try {
       Files.write("sjr:password:test", passwordFile, Charsets.ISO_8859_1)
-      session.setPasswordProvider(SanePasswordProvider.usingSanePassFile(passwordFile.getAbsolutePath))
-      val device: SaneDevice = session.getDevice("test")
+      session.passwordProvider = SanePasswordProvider.usingSanePassFile(passwordFile.getAbsolutePath)
+      val device: SaneDevice = session.device("test")
       device.open
       device.acquireImage
     } finally {
@@ -633,7 +633,7 @@ import scala.collection.JavaConversions._
         frameCount.incrementAndGet
     }
 
-    val device: SaneDevice = session.getDevice("test")
+    val device: SaneDevice = session.device("test")
     device.open
     device.option("resolution").fixedValue = 1200
     device.option("mode").stringValue = "Color"

@@ -10,22 +10,23 @@ import java.util.logging.{Level, Logger}
 import com.google.common.base.Preconditions
 
 class SaneSession @throws[IOException] private(val socket: Socket) extends Closeable {
-  private val outputStream: SaneOutputStream = new SaneOutputStream(socket.getOutputStream)
-  private val inputStream: SaneInputStream = new SaneInputStream(this, socket.getInputStream)
-  private var passwordProvider: SanePasswordProvider = SanePasswordProvider.usingDotSanePassFile
+  private val outputStream = new SaneOutputStream(socket.getOutputStream)
+  private val inputStream = new SaneInputStream(this, socket.getInputStream)
+
+  private var _passwordProvider = SanePasswordProvider.usingDotSanePassFile
 
   /**
     * Returns the current password provider. By default, this password provider
     * will be supplied by {@link SanePasswordProvider#usingDotSanePassFile}, but
     * you may override that with {@link #setPasswordProvider}.
     */
-  def getPasswordProvider: SanePasswordProvider = passwordProvider
+  def passwordProvider: SanePasswordProvider = _passwordProvider
 
   /**
     * Sets the {@link SanePasswordProvider password provider} to use if the SANE
     * daemon asks for credentials when accessing a resource.
     */
-  def setPasswordProvider(passwordProvider: SanePasswordProvider) = this.passwordProvider = passwordProvider
+  def passwordProvider_=(passwordProvider: SanePasswordProvider) = _passwordProvider = passwordProvider
 
   /**
     * Returns the device with the give name. Opening the device will fail if the named device does
@@ -37,7 +38,7 @@ class SaneSession @throws[IOException] private(val socket: Socket) extends Close
     * if an error occurs while communicating with the SANE daemon
     */
   @throws[IOException]
-  def getDevice(name: String): SaneDevice = new SaneDevice(this, name, "", "", "")
+  def device(name: String): SaneDevice = new SaneDevice(this, name, "", "", "")
 
   /**
     * Lists the devices known to the SANE daemon.
@@ -50,7 +51,7 @@ class SaneSession @throws[IOException] private(val socket: Socket) extends Close
     */
   @throws[IOException]
   @throws[SaneException]
-  def listDevices: util.List[SaneDevice] = {
+  def listDevices: List[SaneDevice] = {
     outputStream.write(SaneRpcCode.SANE_NET_GET_DEVICES)
     inputStream.readDeviceList
   }
@@ -61,14 +62,12 @@ class SaneSession @throws[IOException] private(val socket: Socket) extends Close
     * @throws IOException if an error occurred while closing the connection
     */
   @throws[IOException]
-  def close {
-    try {
+  def close =    try {
       outputStream.write(SaneRpcCode.SANE_NET_EXIT)
       outputStream.close
     } finally {
       socket.close
     }
-  }
 
 
   @throws[IOException]
@@ -160,7 +159,7 @@ class SaneSession @throws[IOException] private(val socket: Socket) extends Close
           imageSocket.close
       }
       currentFrame += 1
-    } while (!parameters.isLastFrame)
+    } while (!parameters.lastFrame)
 
     listener.scanningFinished(device)
     val image: SaneImage = builder.build
@@ -169,7 +168,7 @@ class SaneSession @throws[IOException] private(val socket: Socket) extends Close
 
 
   private def getLikelyTotalFrameCount(parameters: SaneParameters): Int = {
-    parameters.getFrameType match {
+    parameters.frameType match {
       case FrameType.RED | FrameType.GREEN | FrameType.BLUE =>
         3
       case _ =>

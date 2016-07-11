@@ -7,13 +7,13 @@ package au.com.southsky.jfreesane
 class Frame(parameters: SaneParameters,
             val data: Array[Byte]) {
 
-  def `type`: FrameType = parameters.getFrameType
+  def `type`: FrameType = parameters.frameType
 
-  def bytesPerLine: Int = parameters.getBytesPerLine
+  def bytesPerLine: Int = parameters.bytesPerLine
 
-  def width: Int = parameters.getPixelsPerLine
+  def width: Int = parameters.pixelsPerLine
 
-  def height: Int = parameters.getLineCount
+  def height: Int = parameters.lineCount
 
-  def pixelDepth: Int = parameters.getDepthPerPixel
+  def pixelDepth: Int = parameters.depthPerPixel
 }

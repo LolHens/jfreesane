@@ -54,7 +54,7 @@ class SaneOption private[jfreesane](val device: SaneDevice,
 
   def valueCount: Int = descriptor.getValueType match {
     case OptionValueType.BOOLEAN | OptionValueType.STRING => 1
-    case OptionValueType.INT | OptionValueType.FIXED => size / SaneWord.SIZE_IN_BYTES
+    case OptionValueType.INT | OptionValueType.FIXED => size / SaneWord.sizeBytes
     case OptionValueType.BUTTON | OptionValueType.GROUP =>
       throw new IllegalStateException("Option type '" + descriptor.getValueType + "' has no value count")
 
@@ -73,9 +73,9 @@ class SaneOption private[jfreesane](val device: SaneDevice,
 
   def wordConstraints: List[SaneWord] = descriptor.getWordConstraints
 
-  def integerValueListConstraint: List[Int] = descriptor.getWordConstraints.map(SaneWord.TO_INTEGER_FUNCTION)
+  def integerValueListConstraint: List[Int] = descriptor.getWordConstraints.map(_.integerValue)
 
-  def fixedValueListConstraint: List[Double] = descriptor.getWordConstraints.map(SaneWord.TO_FIXED_FUNCTION)
+  def fixedValueListConstraint: List[Double] = descriptor.getWordConstraints.map(_.fixedPrecisionValue)
 
   override def toString: String = String.format("Option: %s, %s, value type: %s, units: %s", descriptor.getName, descriptor.getTitle, descriptor.getValueType, descriptor.getUnits)
 
@@ -120,7 +120,7 @@ class SaneOption private[jfreesane](val device: SaneDevice,
 
     val result: SaneOption.ControlOptionResult = readOption
     Preconditions.checkState(result.`type` eq OptionValueType.INT)
-    Preconditions.checkState(result.valueSize == SaneWord.SIZE_IN_BYTES, ("unexpected value size " + result.valueSize + ", expecting " + SaneWord.SIZE_IN_BYTES): Object)
+    Preconditions.checkState(result.valueSize == SaneWord.sizeBytes, ("unexpected value size " + result.valueSize + ", expecting " + SaneWord.sizeBytes): Object)
 
     // TODO: handle resource authorisation
     // TODO: check status -- may have to reload options!!
@@ -133,7 +133,7 @@ class SaneOption private[jfreesane](val device: SaneDevice,
     val result: SaneOption.ControlOptionResult = readOption
     Preconditions.checkState(result.`type` eq OptionValueType.INT)
 
-    (0 until result.valueSize by SaneWord.SIZE_IN_BYTES)
+    (0 until result.valueSize by SaneWord.sizeBytes)
       .map(i => SaneWord.fromBytes(result.value, i).integerValue)
       .toList
   }
@@ -175,7 +175,7 @@ class SaneOption private[jfreesane](val device: SaneDevice,
     Preconditions.checkState(result.`type` eq OptionValueType.FIXED)
 
     val values = Lists.newArrayList[Double]()
-    for (i <- 0 until result.valueSize by SaneWord.SIZE_IN_BYTES)
+    for (i <- 0 until result.valueSize by SaneWord.sizeBytes)
       values.add(SaneWord.fromBytes(result.value, i).fixedPrecisionValue)
 
     values
@@ -199,7 +199,7 @@ class SaneOption private[jfreesane](val device: SaneDevice,
 
     val elementCount: Int = valueType match {
       case OptionValueType.BOOLEAN | OptionValueType.FIXED | OptionValueType.INT =>
-        size / SaneWord.SIZE_IN_BYTES
+        size / SaneWord.sizeBytes
       case OptionValueType.STRING =>
         size
       case _ =>
@@ -268,8 +268,8 @@ class SaneOption private[jfreesane](val device: SaneDevice,
 
     val result = writeWordListOption(wordValues)
 
-    val newValues: util.List[Double] = Lists.newArrayListWithCapacity(result.valueSize / SaneWord.SIZE_IN_BYTES)
-    for (i <- 0 until result.valueSize by SaneWord.SIZE_IN_BYTES)
+    val newValues: util.List[Double] = Lists.newArrayListWithCapacity(result.valueSize / SaneWord.sizeBytes)
+    for (i <- 0 until result.valueSize by SaneWord.sizeBytes)
       newValues.add(SaneWord.fromBytes(result.value, i).fixedPrecisionValue)
 
     newValues
@@ -322,7 +322,7 @@ class SaneOption private[jfreesane](val device: SaneDevice,
 
     val result: SaneOption.ControlOptionResult = writeOption(ImmutableList.of[Integer](newValue))
     Preconditions.checkState(result.`type` eq OptionValueType.INT)
-    Preconditions.checkState(result.valueSize == SaneWord.SIZE_IN_BYTES)
+    Preconditions.checkState(result.valueSize == SaneWord.sizeBytes)
 
     SaneWord.fromBytes(result.value).integerValue
   }
@@ -332,9 +332,9 @@ class SaneOption private[jfreesane](val device: SaneDevice,
   def integerValue_=(newValue: util.List[Integer]): util.List[Integer] = {
     val result: SaneOption.ControlOptionResult = writeOption(newValue)
 
-    val newValues: util.List[Integer] = Lists.newArrayListWithCapacity(result.valueSize / SaneWord.SIZE_IN_BYTES)
+    val newValues: util.List[Integer] = Lists.newArrayListWithCapacity(result.valueSize / SaneWord.sizeBytes)
     var i: Int = 0
-    for (i <- 0 until result.valueSize by SaneWord.SIZE_IN_BYTES)
+    for (i <- 0 until result.valueSize by SaneWord.sizeBytes)
       newValues.add(SaneWord.fromBytes(result.value, i).integerValue)
 
     newValues
@@ -353,7 +353,7 @@ class SaneOption private[jfreesane](val device: SaneDevice,
     out.write(SaneWord.forInt(SaneOption.OptionAction.SET_VALUE.wireValue))
     out.write(valueType)
 
-    out.write(SaneWord.forInt(value.size * SaneWord.SIZE_IN_BYTES))
+    out.write(SaneWord.forInt(value.size * SaneWord.sizeBytes))
 
     // Write the pointer to the words
     out.write(SaneWord.forInt(value.size))

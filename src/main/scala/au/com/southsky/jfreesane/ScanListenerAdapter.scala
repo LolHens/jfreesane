@@ -10,7 +10,7 @@ class ScanListenerAdapter extends ScanListener {
 
   def frameAcquisitionStarted(device: SaneDevice, parameters: SaneParameters, currentFrame: Int, likelyTotalFrames: Int) = ()
 
-  def recordRead(device: SaneDevice, totalBytesRead: Int, imageSize: Int) = ()
+  def recordRead(device: SaneDevice, totalBytesRead: Int, imageSize: Option[Int]) = ()
 
   def scanningFinished(device: SaneDevice) = ()
 }

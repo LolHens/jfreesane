@@ -5,7 +5,7 @@ import java.util
 import java.util.logging.{Level, Logger}
 
 import com.google.common.base.Charsets
-import com.google.common.collect.{ImmutableList, Lists}
+import com.google.common.collect.Lists
 import com.google.common.io.ByteStreams
 
 import scala.collection.JavaConversions._
@@ -30,34 +30,35 @@ class SaneInputStream(val saneSession: SaneSession,
 
   @throws[IOException]
   @throws[SaneException]
-  def readDeviceList: util.List[SaneDevice] = {
+  def readDeviceList: List[SaneDevice] = {
     // Status first
-    val status: SaneStatus = readStatus
+    val status = readStatus
 
-    if (!(SaneStatus.STATUS_GOOD == status))
+    if (status != SaneStatus.STATUS_GOOD)
       throw new SaneException(status)
 
     // now we're reading an array, decode the length of the array (which
     // includes the null if the array is non-empty)
     val length: Int = readWord.integerValue - 1
     if (length <= 0)
-      return ImmutableList.of()
+      Nil
+    else {
+      var result = List[SaneDevice]()
 
-    val result: ImmutableList.Builder[SaneDevice] = ImmutableList.builder()
+      for (i <- 0 until length) {
+        val device = readSaneDevicePointer
+        if (device == null)
+          throw new IllegalStateException("null pointer encountered when not expected")
 
-    for (i <- 0 until length) {
-      val device = readSaneDevicePointer
-      if (device == null)
-        throw new IllegalStateException("null pointer encountered when not expected")
+        result = result :+ device
+      }
 
-      result.add(device)
+      // read past a trailing byte in the response that I haven't figured
+      // out yet...
+      readWord
+
+      result
     }
-
-    // read past a trailing byte in the response that I haven't figured
-    // out yet...
-    readWord
-
-    result.build
   }
 
   /**

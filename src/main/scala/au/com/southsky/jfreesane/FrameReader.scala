@@ -19,22 +19,49 @@ class FrameReader(val device: SaneDevice,
   @throws[IOException]
   @throws[SaneException]
   def readFrame: Frame = {
+    @throws[IOException]
+    @throws[SaneException]
+    def readRecord(destination: OutputStream): Int = {
+      val inputStream: DataInputStream = new DataInputStream(underlyingStream)
+      val length: Int = inputStream.readInt
+
+      if (length == 0xffffffff) {
+        FrameReader.log.fine("Reached end of records")
+
+        // Hack: saned may actually write a status record here, even
+        // though the sane specification says that no more bytes should
+        // be read in an end-of-records situation
+        val status: Int = inputStream.read
+        if (status != -1) {
+          val saneStatus: SaneStatus = SaneStatus.fromWireValue(status)
+
+          // An EOF condition is expected: that is what SANE told us!
+          if (saneStatus != null && (saneStatus ne SaneStatus.STATUS_EOF))
+            throw new SaneException(saneStatus)
+        }
+        return -1
+      }
+
+      if (UnsignedInteger.fromIntBits(length).longValue > Integer.MAX_VALUE)
+        throw new IllegalStateException("TODO: support massive records")
+
+      val bytesRead: Int = ByteStreams.copy(ByteStreams.limit(inputStream, length), destination).toInt
+      FrameReader.log.log(Level.FINE, "Read a record of {0} bytes", bytesRead)
+
+      bytesRead
+    }
+
     FrameReader.log.log(Level.FINE, "Reading frame: {0}", this)
-    var bigArray: ByteArrayOutputStream = null
-    val imageSize: Int = parameters.getBytesPerLine * parameters.getLineCount
 
     // For hand-held scanners where the line count is not known, report an image
     // size of -1 to the user.
-    val reportedImageSize: Int =
-      if (parameters.getLineCount == -1)
-        -1
+    val imageSizeBytes: Option[Int] =
+      if (parameters.lineCount == -1)
+        None
       else
-        imageSize
+        Some(parameters.bytesPerLine * parameters.lineCount)
 
-    if (parameters.getLineCount > 0)
-      bigArray = new ByteArrayOutputStream(imageSize)
-    else
-      bigArray = new ByteArrayOutputStream(256)
+    val bigArray = new ByteArrayOutputStream(imageSizeBytes.getOrElse(256))
 
     var bytesRead: Int = 0
     var totalBytesRead: Int = 0
@@ -45,21 +72,26 @@ class FrameReader(val device: SaneDevice,
     }) {
       {
         totalBytesRead += bytesRead
-        listener.recordRead(device, totalBytesRead, reportedImageSize)
+        listener.recordRead(device, totalBytesRead, imageSizeBytes)
       }
     }
 
-    if (imageSize > 0 && bigArray.size < imageSize) {
-      val difference: Int = imageSize - bigArray.size
-      FrameReader.log.log(Level.WARNING, "truncated read (got {0}, expected {1} bytes)", Array(bigArray.size, imageSize))
-      bigArray.write(new Array[Byte](difference))
-      FrameReader.log.log(Level.WARNING, "padded image with {0} null bytes", difference)
+    // Pad image if necessary
+    imageSizeBytes match {
+      case Some(imageSize) if bigArray.size < imageSize =>
+        val difference: Int = imageSize - bigArray.size
+        FrameReader.log.log(Level.WARNING, "truncated read (got {0}, expected {1} bytes)", Array(bigArray.size, imageSize))
+
+        bigArray.write(new Array[Byte](difference))
+
+        FrameReader.log.log(Level.WARNING, "padded image with {0} null bytes", difference)
+
+      case None =>
     }
 
-    // Now, if necessary, put the bytes in the correct order according
-    // to the stream's endianness
+    // Now, if necessary, put the bytes in the correct order according to the stream's endianness
     val outputArray: Array[Byte] = bigArray.toByteArray
-    if (parameters.getDepthPerPixel == 16 && !bigEndian) {
+    if (parameters.depthPerPixel == 16 && !bigEndian) {
       if (outputArray.length % 2 != 0)
         throw new IOException("expected a multiple of 2 frame length")
 
@@ -72,45 +104,13 @@ class FrameReader(val device: SaneDevice,
         i += 2
       }
     }
-    if (parameters.getLineCount <= 0) {
+    if (parameters.lineCount <= 0) {
       // register the real height
-      parameters.setLineCount(outputArray.length / parameters.getBytesPerLine)
-      FrameReader.log.log(Level.FINE, "Detected new frame line count: {0}", parameters.getLineCount)
+      parameters.lineCount = outputArray.length / parameters.bytesPerLine
+      FrameReader.log.log(Level.FINE, "Detected new frame line count: {0}", parameters.lineCount)
     }
 
     new Frame(parameters, outputArray)
-  }
-
-  @throws[IOException]
-  @throws[SaneException]
-  private def readRecord(destination: OutputStream): Int = {
-    val inputStream: DataInputStream = new DataInputStream(underlyingStream)
-    val length: Int = inputStream.readInt
-
-    if (length == 0xffffffff) {
-      FrameReader.log.fine("Reached end of records")
-
-      // Hack: saned may actually write a status record here, even
-      // though the sane specification says that no more bytes should
-      // be read in an end-of-records situation
-      val status: Int = inputStream.read
-      if (status != -1) {
-        val saneStatus: SaneStatus = SaneStatus.fromWireValue(status)
-
-        // An EOF condition is expected: that is what SANE told us!
-        if (saneStatus != null && (saneStatus ne SaneStatus.STATUS_EOF))
-          throw new SaneException(saneStatus)
-      }
-      return -1
-    }
-
-    if (UnsignedInteger.fromIntBits(length).longValue > Integer.MAX_VALUE)
-      throw new IllegalStateException("TODO: support massive records")
-
-    val bytesRead: Int = ByteStreams.copy(ByteStreams.limit(inputStream, length), destination).toInt
-    FrameReader.log.log(Level.FINE, "Read a record of {0} bytes", bytesRead)
-
-    bytesRead
   }
 
   override def toString: String = MoreObjects.toStringHelper(classOf[FrameReader]).add("isBigEndian", bigEndian).add("parameters", parameters).toString

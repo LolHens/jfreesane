@@ -2,22 +2,17 @@ package au.com.southsky.jfreesane
 
 import com.google.common.base.MoreObjects
 
-class SaneParameters private[jfreesane](val frame: Int, val lastFrame: Boolean, val bytesPerLine: Int, val pixelsPerLine: Int, var lineCount: Int, val depthPerPixel: Int) {
-  private val frameType: FrameType = FrameType(frame)
+class SaneParameters(frame: Int,
+                     val lastFrame: Boolean,
+                     val bytesPerLine: Int,
+                     val pixelsPerLine: Int,
+                     private var _lineCount: Int,
+                     val depthPerPixel: Int) {
+  val frameType: FrameType = FrameType(frame)
 
-  def getFrameType: FrameType = frameType
+  def lineCount: Int = _lineCount
 
-  def isLastFrame: Boolean = lastFrame
-
-  def getBytesPerLine: Int = bytesPerLine
-
-  def getPixelsPerLine: Int = pixelsPerLine
-
-  def getLineCount: Int = lineCount
-
-  private[jfreesane] def setLineCount(lineCount: Int) = this.lineCount = lineCount
-
-  def getDepthPerPixel: Int = depthPerPixel
+  private[jfreesane] def lineCount_=(value: Int) = _lineCount = value
 
   override def toString: String =
     MoreObjects.toStringHelper(classOf[SaneParameters])

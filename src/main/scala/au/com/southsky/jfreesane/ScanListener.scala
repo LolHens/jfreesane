@@ -77,7 +77,7 @@ trait ScanListener {
     * in advance, this will be set to -1 (e.g. the scanner is a
     * hand-held scanner or uses page height detection)
     */
-  def recordRead(device: SaneDevice, totalBytesRead: Int, imageSizeBytes: Int)
+  def recordRead(device: SaneDevice, totalBytesRead: Int, imageSizeBytes: Option[Int])
 
   /**
     * Called once the current page is done.

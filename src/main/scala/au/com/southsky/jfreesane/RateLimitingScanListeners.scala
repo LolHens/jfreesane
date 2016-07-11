@@ -53,7 +53,7 @@ object RateLimitingScanListeners {
       def frameAcquisitionStarted(device: SaneDevice, parameters: SaneParameters, currentFrame: Int, likelyTotalFrames: Int) =
         listener.frameAcquisitionStarted(device, parameters, currentFrame, likelyTotalFrames)
 
-      def recordRead(device: SaneDevice, totalBytesRead: Int, imageSizeBytes: Int) = {
+      def recordRead(device: SaneDevice, totalBytesRead: Int, imageSizeBytes: Option[Int]) = {
         val currentTime: Long = System.currentTimeMillis
 
         if (!lastSentTime.containsKey(device))
