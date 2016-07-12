@@ -17,11 +17,11 @@ class SaneWordTest {
 
   @Test def fromArrayWithOffset = {
     val array: Array[Byte] = Array[Byte](0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 2, 0, 0, 0, 3, 0, 0, 0, 4)
-    assertEquals(0, SaneWord.fromBytes(array, 0).integerValue)
-    assertEquals(1, SaneWord.fromBytes(array, 4).integerValue)
-    assertEquals(2, SaneWord.fromBytes(array, 8).integerValue)
-    assertEquals(3, SaneWord.fromBytes(array, 12).integerValue)
-    assertEquals(4, SaneWord.fromBytes(array, 16).integerValue)
+    assertEquals(0, SaneWord.fromBytes(array, 0).intValue)
+    assertEquals(1, SaneWord.fromBytes(array, 4).intValue)
+    assertEquals(2, SaneWord.fromBytes(array, 8).intValue)
+    assertEquals(3, SaneWord.fromBytes(array, 12).intValue)
+    assertEquals(4, SaneWord.fromBytes(array, 16).intValue)
   }
 
   @Test
@@ -29,11 +29,11 @@ class SaneWordTest {
   def fromStream = {
     val array: Array[Byte] = Array[Byte](0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 2, 0, 0, 0, 3, 0, 0, 0, 4)
     val stream: InputStream = new ByteArrayInputStream(array)
-    Truth.assertThat(Integer.valueOf(SaneWord.fromStream(stream).integerValue)).comparesEqualTo(0)
-    Truth.assertThat(Integer.valueOf(SaneWord.fromStream(stream).integerValue)).comparesEqualTo(1)
-    Truth.assertThat(Integer.valueOf(SaneWord.fromStream(stream).integerValue)).comparesEqualTo(2)
-    Truth.assertThat(Integer.valueOf(SaneWord.fromStream(stream).integerValue)).comparesEqualTo(3)
-    Truth.assertThat(Integer.valueOf(SaneWord.fromStream(stream).integerValue)).comparesEqualTo(4)
+    Truth.assertThat(Integer.valueOf(SaneWord.fromStream(stream).intValue)).comparesEqualTo(0)
+    Truth.assertThat(Integer.valueOf(SaneWord.fromStream(stream).intValue)).comparesEqualTo(1)
+    Truth.assertThat(Integer.valueOf(SaneWord.fromStream(stream).intValue)).comparesEqualTo(2)
+    Truth.assertThat(Integer.valueOf(SaneWord.fromStream(stream).intValue)).comparesEqualTo(3)
+    Truth.assertThat(Integer.valueOf(SaneWord.fromStream(stream).intValue)).comparesEqualTo(4)
 
     try {
       SaneWord.fromStream(stream)

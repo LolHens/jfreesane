@@ -1,4 +1,4 @@
-package au.com.southsky.jfreesane
+package au.com.southsky.jfreesane.enums
 
 /**
   * Instances of this enum are returned by {@link SaneOption#getType} that indicate the type of value

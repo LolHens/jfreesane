@@ -2,6 +2,8 @@ package au.com.southsky.jfreesane
 
 import java.io.{IOException, OutputStream}
 
+import au.com.southsky.jfreesane.enums.SaneEnum
+
 /**
   * This class wraps a {@link OutputStream} and provides a handful of utilities to serialize
   * SANE-related types to the underlying stream.

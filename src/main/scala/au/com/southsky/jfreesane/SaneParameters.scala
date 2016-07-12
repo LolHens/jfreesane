@@ -1,5 +1,6 @@
 package au.com.southsky.jfreesane
 
+import au.com.southsky.jfreesane.enums.FrameType
 import com.google.common.base.MoreObjects
 
 class SaneParameters(frame: Int,

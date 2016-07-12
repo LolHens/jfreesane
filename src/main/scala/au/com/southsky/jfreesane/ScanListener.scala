@@ -1,5 +1,7 @@
 package au.com.southsky.jfreesane
 
+import au.com.southsky.jfreesane.device.SaneDevice
+
 /**
   * Implementations of this interface can receive notifications when certain
   * events happen during a page scan. To receive notifications, use the

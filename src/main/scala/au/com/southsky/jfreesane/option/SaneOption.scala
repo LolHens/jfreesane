@@ -1,10 +1,13 @@
-package au.com.southsky.jfreesane
+package au.com.southsky.jfreesane.option
 
 import java.io.IOException
 import java.nio.charset.Charset
 import java.util
 import java.util.logging.Logger
 
+import au.com.southsky.jfreesane._
+import au.com.southsky.jfreesane.device.SaneDevice
+import au.com.southsky.jfreesane.enums._
 import com.google.common.base.{Charsets, Function, Preconditions, Strings}
 import com.google.common.collect.{ImmutableList, Lists}
 import com.google.common.io.ByteStreams
@@ -34,8 +37,11 @@ class SaneOption private[jfreesane](val device: SaneDevice,
                                     optionNumber: Int,
                                     descriptor: SaneOptionDescriptor) {
 
-  if (descriptor.group != null && (valueType ne OptionValueType.GROUP)) {
-    descriptor.group.addOption(this)
+  descriptor.group match {
+    case Some(group) if valueType == OptionValueType.GROUP =>
+      group += this
+
+    case _ =>
   }
 
   def name: String = descriptor.name
@@ -44,7 +50,7 @@ class SaneOption private[jfreesane](val device: SaneDevice,
 
   def description: String = descriptor.description
 
-  def group: OptionGroup = descriptor.group
+  def group: OptionGroup = descriptor.group.orNull
 
   def `type`: OptionValueType = descriptor.valueType
 
@@ -67,13 +73,13 @@ class SaneOption private[jfreesane](val device: SaneDevice,
 
   def constraintType: OptionValueConstraintType = descriptor.constraintType
 
-  def rangeConstraints: RangeConstraint = descriptor.rangeConstraints.get
+  def rangeConstraints: RangeConstraint = descriptor.rangeConstraints.orNull
 
   def stringConstraints: List[String] = descriptor.stringConstraints
 
   def wordConstraints: List[SaneWord] = descriptor.wordConstraints
 
-  def integerValueListConstraint: List[Int] = descriptor.wordConstraints.map(_.integerValue)
+  def integerValueListConstraint: List[Int] = descriptor.wordConstraints.map(_.intValue)
 
   def fixedValueListConstraint: List[Double] = descriptor.wordConstraints.map(_.fixedPrecisionValue)
 
@@ -95,7 +101,7 @@ class SaneOption private[jfreesane](val device: SaneDevice,
     Preconditions.checkState(valueCount == 1, "option is a boolean array, not boolean": Object)
 
     val result: SaneOption.ControlOptionResult = readOption
-    SaneWord.fromBytes(result.value).integerValue != 0
+    SaneWord.fromBytes(result.value).intValue != 0
   }
 
   /**
@@ -124,7 +130,7 @@ class SaneOption private[jfreesane](val device: SaneDevice,
 
     // TODO: handle resource authorisation
     // TODO: check status -- may have to reload options!!
-    SaneWord.fromBytes(result.value).integerValue // the value
+    SaneWord.fromBytes(result.value).intValue // the value
   }
 
   @throws[IOException]
@@ -134,7 +140,7 @@ class SaneOption private[jfreesane](val device: SaneDevice,
     Preconditions.checkState(result.`type` eq OptionValueType.INT)
 
     (0 until result.valueSize by SaneWord.sizeBytes)
-      .map(i => SaneWord.fromBytes(result.value, i).integerValue)
+      .map(i => SaneWord.fromBytes(result.value, i).intValue)
       .toList
   }
 
@@ -228,7 +234,7 @@ class SaneOption private[jfreesane](val device: SaneDevice,
     val result: SaneOption.ControlOptionResult = writeOption(SaneWord.forInt(if (value) 1 else 0))
     Preconditions.checkState(result.`type` eq OptionValueType.BOOLEAN)
 
-    SaneWord.fromBytes(result.value).integerValue != 0
+    SaneWord.fromBytes(result.value).intValue != 0
   }
 
   @throws[IOException]
@@ -324,7 +330,7 @@ class SaneOption private[jfreesane](val device: SaneDevice,
     Preconditions.checkState(result.`type` eq OptionValueType.INT)
     Preconditions.checkState(result.valueSize == SaneWord.sizeBytes)
 
-    SaneWord.fromBytes(result.value).integerValue
+    SaneWord.fromBytes(result.value).intValue
   }
 
   @throws[IOException]
@@ -335,7 +341,7 @@ class SaneOption private[jfreesane](val device: SaneDevice,
     val newValues: util.List[Integer] = Lists.newArrayListWithCapacity(result.valueSize / SaneWord.sizeBytes)
     var i: Int = 0
     for (i <- 0 until result.valueSize by SaneWord.sizeBytes)
-      newValues.add(SaneWord.fromBytes(result.value, i).integerValue)
+      newValues.add(SaneWord.fromBytes(result.value, i).intValue)
 
     newValues
   }
@@ -379,7 +385,7 @@ class SaneOption private[jfreesane](val device: SaneDevice,
     Preconditions.checkState(valueType eq OptionValueType.STRING)
     val out: SaneOutputStream = device.session.getOutputStream
     out.write(SaneRpcCode.SANE_NET_CONTROL_OPTION)
-    out.write(SaneWord.forInt(device.getHandle.handle.integerValue))
+    out.write(SaneWord.forInt(device.getHandle.handle.intValue))
     out.write(SaneWord.forInt(this.optionNumber))
     out.write(SaneWord.forInt(SaneOption.OptionAction.SET_VALUE.wireValue))
     out.write(valueType)
@@ -576,7 +582,7 @@ object SaneOption {
     outputStream.write(device.getHandle.handle)
 
     // first word of response is number of option entries
-    val length: Int = inputStream.readWord.integerValue - 1
+    val length: Int = inputStream.readWord.intValue - 1
     if (length <= 0)
       Nil
     else {
@@ -624,17 +630,17 @@ object SaneOption {
 
       var status: SaneWord = stream.readWord
 
-      if (status.integerValue != 0)
-        throw SaneException.fromStatusWord(status)
+      if (status.intValue != 0)
+        throw SaneException(status)
 
-      var info: Int = stream.readWord.integerValue
+      var info: Int = stream.readWord.intValue
 
-      var `type`: OptionValueType = OptionValueType(stream.readWord.integerValue)
+      var `type`: OptionValueType = OptionValueType(stream.readWord.intValue)
 
-      var valueSize: Int = stream.readWord.integerValue
+      var valueSize: Int = stream.readWord.intValue
 
       // read the pointer
-      var pointer: Int = stream.readWord.integerValue
+      var pointer: Int = stream.readWord.intValue
       var value: Array[Byte] =
         if (pointer == 0)
           null
@@ -652,17 +658,17 @@ object SaneOption {
         session.authorize(resource)
         status = stream.readWord
 
-        if (status.integerValue != 0)
-          throw SaneException.fromStatusWord(status)
+        if (status.intValue != 0)
+          throw SaneException(status)
 
-        info = stream.readWord.integerValue
+        info = stream.readWord.intValue
 
-        `type` = OptionValueType(stream.readWord.integerValue)
+        `type` = OptionValueType(stream.readWord.intValue)
 
-        valueSize = stream.readWord.integerValue
+        valueSize = stream.readWord.intValue
 
         // read the pointer
-        pointer = stream.readWord.integerValue
+        pointer = stream.readWord.intValue
         value =
           if (pointer == 0)
             null
@@ -676,7 +682,7 @@ object SaneOption {
           }
       }
 
-      new SaneOption.ControlOptionResult(status.integerValue, info, `type`, valueSize, value, resource)
+      new SaneOption.ControlOptionResult(status.intValue, info, `type`, valueSize, value, resource)
     }
   }
 

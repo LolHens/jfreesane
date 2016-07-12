@@ -3,6 +3,9 @@ package au.com.southsky.jfreesane
 import java.io.{IOException, InputStream}
 import java.util.logging.{Level, Logger}
 
+import au.com.southsky.jfreesane.device.SaneDevice
+import au.com.southsky.jfreesane.enums.{OptionCapability, OptionValueConstraintType, OptionValueType, SaneStatus}
+import au.com.southsky.jfreesane.option.{OptionGroup, SaneOption, SaneOptionDescriptor}
 import com.google.common.base.Charsets
 import com.google.common.io.ByteStreams
 
@@ -15,7 +18,7 @@ import scala.collection.mutable.ListBuffer
   */
 class SaneInputStream(val saneSession: SaneSession,
                       var wrappedStream: InputStream) extends InputStream {
-  private var currentGroup: OptionGroup = null
+  private var currentGroup: Option[OptionGroup] = None
 
   @throws[IOException]
   def read: Int = wrappedStream.read
@@ -33,7 +36,7 @@ class SaneInputStream(val saneSession: SaneSession,
     readStatus match {
       case SaneStatus.STATUS_GOOD =>
         // now we're reading an array, decode the length of the array (which includes the null if the array is non-empty)
-        val length: Int = readWord.integerValue - 1
+        val length: Int = readWord.intValue - 1
         if (length > 0) {
           val result: List[SaneDevice] =
             (0 until length).map(_ =>
@@ -54,7 +57,7 @@ class SaneInputStream(val saneSession: SaneSession,
           Nil
 
       case status =>
-        throw new SaneException(status)
+        throw SaneException(status)
     }
   }
 
@@ -78,7 +81,7 @@ class SaneInputStream(val saneSession: SaneSession,
     * Reads a single pointer and returns {@code true} if it was non-null.
     */
   @throws[IOException]
-  private def readPointer: Boolean = readWord.integerValue != 0
+  private def readPointer: Boolean = readWord.intValue != 0
 
   @throws[IOException]
   private def readSaneDevice: SaneDevice = {
@@ -93,7 +96,7 @@ class SaneInputStream(val saneSession: SaneSession,
   @throws[IOException]
   def readString: String = {
     // read the length
-    val length: Int = readWord.integerValue
+    val length: Int = readWord.intValue
 
     if (length != 0) {
       // now read all the bytes
@@ -109,18 +112,18 @@ class SaneInputStream(val saneSession: SaneSession,
 
   @throws[IOException]
   def readSaneParameters: SaneParameters = {
-    val frame = readWord.integerValue
-    val lastFrame = readWord.integerValue == 1
-    val bytesPerLine = readWord.integerValue
-    val pixelsPerLine = readWord.integerValue
-    val lines = readWord.integerValue
-    val depth = readWord.integerValue
+    val frame = readWord.intValue
+    val lastFrame = readWord.intValue == 1
+    val bytesPerLine = readWord.intValue
+    val pixelsPerLine = readWord.intValue
+    val lines = readWord.intValue
+    val depth = readWord.intValue
 
     new SaneParameters(frame, lastFrame, bytesPerLine, pixelsPerLine, lines, depth)
   }
 
   @throws[IOException]
-  def readStatus: SaneStatus = SaneStatus.fromWireValue(readWord.integerValue)
+  def readStatus: SaneStatus = SaneStatus.fromWireValue(readWord.intValue)
 
   @throws[IOException]
   def readWord: SaneWord = SaneWord.fromStream(this)
@@ -137,18 +140,18 @@ class SaneInputStream(val saneSession: SaneSession,
     // TODO: range check here
     val valueType: OptionValueType = OptionValueType(readWord)
 
-    if (valueType eq OptionValueType.GROUP)
+    if (valueType == OptionValueType.GROUP)
     // a new group applies!
-      currentGroup = new OptionGroup(optionTitle)
+      currentGroup = Some(new OptionGroup(optionTitle))
 
     // TODO: range check here
     val units: SaneOption.OptionUnits = SaneOption.OptionUnits(readWord)
 
-    val size: Int = readWord.integerValue
+    val size: Int = readWord.intValue
 
     // constraint type
 
-    val capabilityWord: Int = readWord.integerValue
+    val capabilityWord: Int = readWord.intValue
 
     // TODO: range check here
     val constraintType = OptionValueConstraintType(readWord)
@@ -164,7 +167,7 @@ class SaneInputStream(val saneSession: SaneSession,
       // inputStream.readWord(); // discard empty list
 
       case OptionValueConstraintType.STRING_LIST_CONSTRAINT =>
-        val n = readWord.integerValue
+        val n = readWord.intValue
         for (i <- 0 until n) {
           val stringConstraint = readString
 
@@ -174,7 +177,7 @@ class SaneInputStream(val saneSession: SaneSession,
         }
 
       case OptionValueConstraintType.VALUE_LIST_CONSTRAINT =>
-        val n = readWord.integerValue
+        val n = readWord.intValue
         for (i <- 0 until n) {
           // first element is list length, don't add that
           val value = readWord

@@ -3,6 +3,7 @@ package au.com.southsky.jfreesane
 import java.util
 import java.util.concurrent.TimeUnit
 
+import au.com.southsky.jfreesane.device.SaneDevice
 import com.google.common.collect.Maps
 
 /**

@@ -1,4 +1,7 @@
-package au.com.southsky.jfreesane
+package au.com.southsky.jfreesane.option
+
+import au.com.southsky.jfreesane.enums.{OptionCapability, OptionValueConstraintType, OptionValueType}
+import au.com.southsky.jfreesane.{RangeConstraint, SaneWord}
 
 /**
   * Describes a SANE option.
@@ -8,7 +11,7 @@ package au.com.southsky.jfreesane
 class SaneOptionDescriptor(val name: String,
                            val title: String,
                            val description: String,
-                           val group: OptionGroup,
+                           val group: Option[OptionGroup],
                            val valueType: OptionValueType,
                            val units: SaneOption.OptionUnits,
                            val size: Int,

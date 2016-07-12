@@ -6,6 +6,8 @@ import java.net.{InetAddress, InetSocketAddress, Socket}
 import java.util.concurrent.TimeUnit
 import java.util.logging.{Level, Logger}
 
+import au.com.southsky.jfreesane.device.{SaneDevice, SaneDeviceHandle}
+import au.com.southsky.jfreesane.enums.{FrameType, SaneRpcCode, SaneStatus}
 import com.google.common.base.Preconditions
 
 class SaneSession @throws[IOException] private(val socket: Socket) extends Closeable {
@@ -77,8 +79,8 @@ class SaneSession @throws[IOException] private(val socket: Socket) extends Close
 
     var status: SaneWord = inputStream.readWord
 
-    if (status.integerValue != 0)
-      throw new SaneException(SaneStatus.fromWireValue(status.integerValue))
+    if (status.intValue != 0)
+      throw SaneException(SaneStatus.fromWireValue(status.intValue))
 
     var handle: SaneWord = inputStream.readWord
     var resource: String = inputStream.readString
@@ -86,8 +88,8 @@ class SaneSession @throws[IOException] private(val socket: Socket) extends Close
     if (!resource.isEmpty) {
       authorize(resource)
       status = inputStream.readWord
-      if (status.integerValue != 0)
-        throw new SaneException(SaneStatus.fromWireValue(status.integerValue))
+      if (status.intValue != 0)
+        throw SaneException(SaneStatus.fromWireValue(status.intValue))
       handle = inputStream.readWord
       resource = inputStream.readString
     }
@@ -111,22 +113,22 @@ class SaneSession @throws[IOException] private(val socket: Socket) extends Close
 
       val startStatus: SaneWord = inputStream.readWord
 
-      var port: Int = inputStream.readWord.integerValue
+      var port: Int = inputStream.readWord.intValue
       var byteOrder: SaneWord = inputStream.readWord
       var resource: String = inputStream.readString
 
-      if (startStatus.integerValue != 0)
-        throw SaneException.fromStatusWord(startStatus)
+      if (startStatus.intValue != 0)
+        throw SaneException(startStatus)
 
       if (!resource.isEmpty) {
         authorize(resource)
 
-        val status: Int = inputStream.readWord.integerValue
+        val status: Int = inputStream.readWord.intValue
         if (status != 0) {
-          throw new SaneException(SaneStatus.fromWireValue(status))
+          throw SaneException(SaneStatus.fromWireValue(status))
         }
 
-        port = inputStream.readWord.integerValue
+        port = inputStream.readWord.intValue
         byteOrder = inputStream.readWord
         resource = inputStream.readString
       }
@@ -139,7 +141,7 @@ class SaneSession @throws[IOException] private(val socket: Socket) extends Close
 
       try {
         imageSocket = new Socket(socket.getInetAddress, port)
-        val status: Int = inputStream.readWord.integerValue
+        val status: Int = inputStream.readWord.intValue
 
         if (status != 0)
           throw new IOException("Unexpected status (" + status + ") in get_parameters")
@@ -151,11 +153,11 @@ class SaneSession @throws[IOException] private(val socket: Socket) extends Close
         // three-pass color scanners.
         listener.frameAcquisitionStarted(device, parameters, currentFrame, getLikelyTotalFrameCount(parameters))
 
-        val frameStream: FrameReader = new FrameReader(device, parameters, new BufferedInputStream(imageSocket.getInputStream, SaneSession.READ_BUFFER_SIZE), 0x4321 == byteOrder.integerValue, listener)
+        val frameStream: FrameReader = new FrameReader(device, parameters, new BufferedInputStream(imageSocket.getInputStream, SaneSession.READ_BUFFER_SIZE), 0x4321 == byteOrder.intValue, listener)
         builder.addFrame(frameStream.readFrame)
       } finally {
         if (imageSocket != null)
-          imageSocket.close
+          imageSocket.close()
       }
       currentFrame += 1
     } while (!parameters.lastFrame)

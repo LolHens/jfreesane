@@ -1,8 +1,10 @@
-package au.com.southsky.jfreesane
+package au.com.southsky.jfreesane.device
 
 import java.awt.image.BufferedImage
 import java.io.{Closeable, IOException}
 
+import au.com.southsky.jfreesane.option.{OptionGroup, SaneOption}
+import au.com.southsky.jfreesane.{ScanListener, ScanListenerAdapter, _}
 import com.google.common.base.Preconditions
 
 /**

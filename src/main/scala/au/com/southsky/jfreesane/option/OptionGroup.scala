@@ -1,5 +1,6 @@
-package au.com.southsky.jfreesane
+package au.com.southsky.jfreesane.option
 
+import au.com.southsky.jfreesane.enums.OptionValueType
 import com.google.common.base.{MoreObjects, Preconditions}
 
 /**
@@ -19,8 +20,8 @@ class OptionGroup(val title: String) {
   /**
     * Adds an option to the group.
     */
-  private[jfreesane] def addOption(option: SaneOption) = {
-    Preconditions.checkState(option.group eq this)
+  private[jfreesane] def +=(option: SaneOption) = {
+    Preconditions.checkState(option.group == this)
     _options = _options :+ option
   }
 

@@ -3,6 +3,8 @@ package au.com.southsky.jfreesane
 import java.io._
 import java.util.logging.{Level, Logger}
 
+import au.com.southsky.jfreesane.device.SaneDevice
+import au.com.southsky.jfreesane.enums.SaneStatus
 import com.google.common.base.MoreObjects
 import com.google.common.io.ByteStreams
 import com.google.common.primitives.UnsignedInteger
@@ -37,7 +39,7 @@ class FrameReader(val device: SaneDevice,
 
           // An EOF condition is expected: that is what SANE told us!
           if (saneStatus != null && (saneStatus ne SaneStatus.STATUS_EOF))
-            throw new SaneException(saneStatus)
+            throw SaneException(saneStatus)
         }
         return -1
       }

@@ -9,19 +9,19 @@ package au.com.southsky.jfreesane
   *
   * @author James Ring (sjr@jdns.org)
   */
-class RangeConstraint(min: SaneWord,
-                      max: SaneWord,
-                      quantum: SaneWord) {
+class RangeConstraint(_min: SaneWord,
+                      _max: SaneWord,
+                      _quantization: SaneWord) {
 
-  def minInt: Int = min.integerValue
+  lazy val minInt = _min.intValue
 
-  def maxInt: Int = max.integerValue
+  lazy val maxInt = _max.intValue
 
-  def quantumInt: Int = quantum.integerValue
+  lazy val quantizationInt = _quantization.intValue
 
-  def minFixed: Double = min.fixedPrecisionValue
+  lazy val minFixed = _min.fixedPrecisionValue
 
-  def maxFixed: Double = max.fixedPrecisionValue
+  lazy val maxFixed = _max.fixedPrecisionValue
 
-  def quantumFixed: Double = quantum.fixedPrecisionValue
+  lazy val quantizationFixed = _quantization.fixedPrecisionValue
 }

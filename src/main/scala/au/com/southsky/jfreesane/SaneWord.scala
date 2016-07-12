@@ -23,19 +23,17 @@ final class SaneWord(val bytes: Array[Byte]) {
   /**
     * Treats this {@link SaneWord} as an integer and returns the represented value.
     */
-  def integerValue: Int = {
-    try {
-      new DataInputStream(new ByteArrayInputStream(bytes)).readInt
-    } catch {
-      case e: IOException =>
-        throw new IllegalStateException(e)
-    }
+  def intValue: Int = try {
+    new DataInputStream(new ByteArrayInputStream(bytes)).readInt
+  } catch {
+    case e: IOException =>
+      throw new IllegalStateException(e)
   }
 
   /**
     * Returns the value of this {@link SaneWord} treated as a SANE fixed precision value.
     */
-  def fixedPrecisionValue: Double = integerValue.toDouble / SaneWord.PRECISION
+  def fixedPrecisionValue: Double = intValue.toDouble / SaneWord.precision
 
   override def toString: String = Arrays.toString(bytes)
 }
@@ -46,7 +44,7 @@ object SaneWord {
     */
   val sizeBytes: Int = 4
 
-  private val PRECISION: Int = 1 << 16
+  private val precision: Int = 1 << 16
 
   /**
     * Returns a new {@code SaneWord} by consuming {@link #SIZE_IN_BYTES} bytes from the given
@@ -115,5 +113,5 @@ object SaneWord {
     * {@code someValue}.
     */
   def forFixedPrecision(value: Double): SaneWord =
-    SaneWord.forInt((value * PRECISION).toInt)
+    SaneWord.forInt((value * precision).toInt)
 }

@@ -1,4 +1,6 @@
-package au.com.southsky.jfreesane
+package au.com.southsky.jfreesane.enums
+
+import au.com.southsky.jfreesane.SaneWord
 
 /**
   * Created by u016595 on 01.07.2016.
@@ -33,7 +35,7 @@ object SaneStatus extends SaneEnumObject[SaneStatus] {
 
   def fromWireValue(wireValue: Int): SaneStatus = SaneStatus(wireValue)
 
-  def fromWireValue(statusWord: SaneWord): SaneStatus = fromWireValue(statusWord.integerValue)
+  def fromWireValue(statusWord: SaneWord): SaneStatus = fromWireValue(statusWord.intValue)
 
   override def values: Set[SaneStatus] = Set(
     STATUS_GOOD,

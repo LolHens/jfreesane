@@ -9,6 +9,9 @@ import java.util.concurrent.atomic.{AtomicInteger, AtomicReference}
 import java.util.logging.{Level, Logger}
 import javax.imageio.ImageIO
 
+import au.com.southsky.jfreesane.device.SaneDevice
+import au.com.southsky.jfreesane.enums.{OptionValueConstraintType, OptionValueType, SaneStatus}
+import au.com.southsky.jfreesane.option.SaneOption
 import com.google.common.base.Charsets
 import com.google.common.collect.{ImmutableList, Lists}
 import com.google.common.io.{Closeables, Files}
@@ -44,7 +47,7 @@ import scala.collection.JavaConversions._
   def listDevicesSucceeds = {
     val devices: util.List[SaneDevice] = session.listDevices
     SaneSessionTest.log.info("Got " + devices.size + " device(s): " + devices)
-    assertThat(devices).isNotEmpty
+    Truth.assertThat(devices).isNotEmpty
   }
 
   @Test
@@ -94,7 +97,7 @@ import scala.collection.JavaConversions._
     val device: SaneDevice = session.device("pixma")
     try {
       device.open
-      val options: util.List[SaneOption] = device.listOptions
+      val options: List[SaneOption] = device.listOptions
       Assert.assertTrue("Expect multiple SaneOptions", options.size > 0)
       System.out.println("We found " + options.size + " options")
 
@@ -102,7 +105,7 @@ import scala.collection.JavaConversions._
       for (option <- options) {
         System.out.println(option.toString)
 
-        if (option.`type` ne OptionValueType.BUTTON)
+        if (option.`type` != OptionValueType.BUTTON)
           System.out.println(option.valueCount)
       }
     } finally {
@@ -171,7 +174,7 @@ import scala.collection.JavaConversions._
           device.acquireImage
         } catch {
           case e: SaneException =>
-            if (e.getStatus == SaneStatus.STATUS_NO_DOCS)
+            if (e.status.orNull == SaneStatus.STATUS_NO_DOCS)
             // out of documents to read, that's fine
               return
             else
@@ -195,7 +198,7 @@ import scala.collection.JavaConversions._
         device.acquireImage
       } catch {
         case e: SaneException =>
-          if (e.getStatus == SaneStatus.STATUS_NO_DOCS)
+          if (e.status.orNull == SaneStatus.STATUS_NO_DOCS)
           // out of documents to read, that's fine
             thrown = true
           else
@@ -390,7 +393,7 @@ import scala.collection.JavaConversions._
       assertEquals(OptionValueConstraintType.RANGE_CONSTRAINT, option.constraintType)
       assertEquals(4, option.rangeConstraints.minInt)
       assertEquals(192, option.rangeConstraints.maxInt)
-      assertEquals(2, option.rangeConstraints.quantumInt)
+      assertEquals(2, option.rangeConstraints.quantizationInt)
     } finally {
       device.close
     }
@@ -409,7 +412,7 @@ import scala.collection.JavaConversions._
       assertEquals(OptionValueConstraintType.RANGE_CONSTRAINT, option.constraintType)
       assertEquals(-42.17, option.rangeConstraints.minFixed, 0.00001)
       assertEquals(32767.9999, option.rangeConstraints.maxFixed, 0.00001)
-      assertEquals(2.0, option.rangeConstraints.quantumFixed, 0.00001)
+      assertEquals(2.0, option.rangeConstraints.quantizationFixed, 0.00001)
     } finally {
       device.close
     }
@@ -588,7 +591,7 @@ import scala.collection.JavaConversions._
       fail("Expected a SaneException, didn't get one")
     } catch {
       case e: SaneException =>
-        if (e.getStatus ne SaneStatus.STATUS_ACCESS_DENIED)
+        if (e.status.orNull != SaneStatus.STATUS_ACCESS_DENIED)
           throw e
 
       // if we got here, we got the expected exception

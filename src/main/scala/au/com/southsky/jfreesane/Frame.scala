@@ -1,5 +1,7 @@
 package au.com.southsky.jfreesane
 
+import au.com.southsky.jfreesane.enums.FrameType
+
 /**
   * Represents one frame of a {@link SaneImage}. A SANE image is composed of one
   * or more of these frames.

@@ -1,4 +1,4 @@
-package au.com.southsky.jfreesane
+package au.com.southsky.jfreesane.enums
 
 /**
   * Represents the various types of image frames in SANE.

@@ -1,4 +1,4 @@
-package au.com.southsky.jfreesane
+package au.com.southsky.jfreesane.enums
 
 /**
   * This enum describes the capabilities possessed by an option. See <a

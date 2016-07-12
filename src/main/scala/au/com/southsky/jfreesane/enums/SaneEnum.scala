@@ -1,5 +1,6 @@
-package au.com.southsky.jfreesane
+package au.com.southsky.jfreesane.enums
 
+import au.com.southsky.jfreesane.SaneWord
 
 /**
   * Enumerations that implement this interface may be serialized in the SANE network protocol. You
@@ -30,5 +31,5 @@ trait SaneEnumObject[T <: SaneEnum[T]] {
 
   def apply(wireValue: Int): T = values.find(_.wireValue == wireValue).get
 
-  def apply(value: SaneWord): T = this (value.integerValue)
+  def apply(value: SaneWord): T = this (value.intValue)
 }

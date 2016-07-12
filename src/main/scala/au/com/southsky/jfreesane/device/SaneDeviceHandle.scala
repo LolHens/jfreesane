@@ -1,6 +1,7 @@
 // Copyright 2012 Google Inc. All Rights Reserved.
-package au.com.southsky.jfreesane
+package au.com.southsky.jfreesane.device
 
+import au.com.southsky.jfreesane.SaneWord
 import com.google.common.base.Strings
 
 /**

@@ -1,4 +1,4 @@
-package au.com.southsky.jfreesane
+package au.com.southsky.jfreesane.enums
 
 /**
   * Represents the opcodes of SANE RPC API calls.

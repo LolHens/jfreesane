@@ -1,4 +1,4 @@
-package au.com.southsky.jfreesane
+package au.com.southsky.jfreesane.enums
 
 /**
   * Represents the types of constraints that a {@link SaneOption} may be subjected to.
