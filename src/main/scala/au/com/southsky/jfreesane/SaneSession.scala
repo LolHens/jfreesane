@@ -3,16 +3,17 @@ package au.com.southsky.jfreesane
 import java.awt.image.BufferedImage
 import java.io.{BufferedInputStream, Closeable, IOException}
 import java.net.{InetAddress, InetSocketAddress, Socket}
-import java.util.concurrent.TimeUnit
 import java.util.logging.{Level, Logger}
 
 import au.com.southsky.jfreesane.device.{SaneDevice, SaneDeviceHandle}
 import au.com.southsky.jfreesane.enums.{FrameType, SaneRpcCode, SaneStatus}
 import com.google.common.base.Preconditions
 
+import scala.concurrent.duration._
+
 class SaneSession @throws[IOException] private(val socket: Socket) extends Closeable {
-  private val outputStream = new SaneOutputStream(socket.getOutputStream)
-  private val inputStream = new SaneInputStream(this, socket.getInputStream)
+  val outputStream = new SaneOutputStream(socket.getOutputStream)
+  val inputStream = new SaneInputStream(this, socket.getInputStream)
 
   private var _passwordProvider = SanePasswordProvider.usingDotSanePassFile
 
@@ -234,8 +235,8 @@ class SaneSession @throws[IOException] private(val socket: Socket) extends Close
     // credentials for this request.
       throw new IOException("Authorization failed - the password provider is " + "unable to provide a password for the resource [" + resource + "]")
 
-    outputStream.write(passwordProvider.getUsername(resource))
-    writePassword(resource, passwordProvider.getPassword(resource))
+    outputStream.write(passwordProvider.username(resource))
+    writePassword(resource, passwordProvider.password(resource))
     // Read reply - from network
     inputStream.readWord
   }
@@ -257,10 +258,6 @@ class SaneSession @throws[IOException] private(val socket: Socket) extends Close
     else
       outputStream.write("$MD5$" + SanePasswordEncoder.derivePassword(resourceParts(1), password))
   }
-
-  private[jfreesane] def getOutputStream: SaneOutputStream = outputStream
-
-  private[jfreesane] def getInputStream: SaneInputStream = inputStream
 }
 
 object SaneSession {
@@ -269,38 +266,20 @@ object SaneSession {
   private val DEFAULT_PORT: Int = 6566
 
   /**
-    * Establishes a connection to the SANE daemon running on the given host on the default SANE port
-    * with no connection timeout.
-    */
-  @throws[IOException]
-  def withRemoteSane(saneAddress: InetAddress): SaneSession = withRemoteSane(saneAddress, DEFAULT_PORT)
-
-  /**
-    * Establishes a connection to the SANE daemon running on the given host on the default SANE port
-    * with the given connection timeout.
-    */
-  @throws[IOException]
-  def withRemoteSane(saneAddress: InetAddress, timeout: Long, timeUnit: TimeUnit): SaneSession = withRemoteSane(saneAddress, DEFAULT_PORT, timeout, timeUnit)
-
-  /**
-    * Establishes a connection to the SANE daemon running on the given host on the given port with no
-    * connection timeout.
-    */
-  @throws[IOException]
-  def withRemoteSane(saneAddress: InetAddress, port: Int): SaneSession = withRemoteSane(saneAddress, port, 0, TimeUnit.MILLISECONDS)
-
-  /**
     * Establishes a connection to the SANE daemon running on the given host on the given port. If the
     * connection cannot be established within the given timeout, {@link SocketTimeoutException} is
     * thrown.
     */
   @throws[IOException]
-  def withRemoteSane(saneAddress: InetAddress, port: Int, timeout: Long, timeUnit: TimeUnit): SaneSession = {
-    val millis: Long = timeUnit.toMillis(timeout)
+  def apply(saneAddress: InetAddress,
+            port: Int = DEFAULT_PORT,
+            timeout: Duration = Duration.Zero): SaneSession = {
+
+    val millis: Long = timeout.toMillis
     Preconditions.checkArgument(millis >= 0 && millis <= Integer.MAX_VALUE, "Timeout must be between 0 and Integer.MAX_VALUE milliseconds": Object)
 
     // If the user specifies a non-zero timeout that rounds to 0 milliseconds, set the timeout to 1 millisecond instead.
-    if (timeout > 0 && millis == 0)
+    if (Duration(millis, MILLISECONDS) != timeout)
       Logger.getLogger(classOf[SaneSession].getName).log(Level.WARNING, "Specified timeout of {0} {1} rounds to 0ms and was clamped to 1ms", Array(timeout, timeUnit))
 
     val socket: Socket = new Socket

@@ -97,7 +97,7 @@ class SaneOption private[jfreesane](val device: SaneDevice,
   @throws[IOException]
   @throws[SaneException]
   def booleanValue: Boolean = {
-    Preconditions.checkState(valueType eq OptionValueType.BOOLEAN, "option is not a boolean": Object)
+    Preconditions.checkState(valueType == OptionValueType.BOOLEAN, "option is not a boolean": Object)
     Preconditions.checkState(valueCount == 1, "option is a boolean array, not boolean": Object)
 
     val result: SaneOption.ControlOptionResult = readOption
@@ -125,8 +125,8 @@ class SaneOption private[jfreesane](val device: SaneDevice,
     // SANE_Status sane_control_option (SANE_Handle h, SANE_Int n, SANE_Action a, void *v, SANE_Int * i);
 
     val result: SaneOption.ControlOptionResult = readOption
-    Preconditions.checkState(result.`type` eq OptionValueType.INT)
-    Preconditions.checkState(result.valueSize == SaneWord.sizeBytes, ("unexpected value size " + result.valueSize + ", expecting " + SaneWord.sizeBytes): Object)
+    Preconditions.checkState(result.`type` == OptionValueType.INT)
+    Preconditions.checkState(result.valueSize == SaneWord.sizeBytes, s"unexpected value size ${result.valueSize}, expecting ${SaneWord.sizeBytes}": Object)
 
     // TODO: handle resource authorisation
     // TODO: check status -- may have to reload options!!
@@ -157,7 +157,7 @@ class SaneOption private[jfreesane](val device: SaneDevice,
   @throws[IOException]
   @throws[SaneException]
   def stringValue(encoding: Charset): String = {
-    Preconditions.checkState(valueType eq OptionValueType.STRING, "option is not a string": Object)
+    Preconditions.checkState(valueType == OptionValueType.STRING, "option is not a string": Object)
 
     val result: SaneOption.ControlOptionResult = readOption
     val value: Array[Byte] = result.value.takeWhile(_ != 0)
@@ -194,7 +194,7 @@ class SaneOption private[jfreesane](val device: SaneDevice,
     Preconditions.checkState(isReadable, "option is not readable": Object)
     Preconditions.checkState(isActive, "option is not active": Object)
 
-    val out: SaneOutputStream = device.session.getOutputStream
+    val out: SaneOutputStream = device.session.outputStream
     out.write(SaneRpcCode.SANE_NET_CONTROL_OPTION)
     out.write(device.getHandle.handle)
     out.write(SaneWord.forInt(optionNumber))
@@ -250,10 +250,10 @@ class SaneOption private[jfreesane](val device: SaneDevice,
   @throws[IOException]
   @throws[SaneException]
   def fixedValue_=(value: Double): Double = {
-    Preconditions.checkArgument(value >= -32768 && value <= 32767.9999, ("value " + value + " is out of range"): Object)
+    Preconditions.checkArgument(value >= -32768 && value <= 32767.9999, s"value $value is out of range": Object)
     val wordValue: SaneWord = SaneWord.forFixedPrecision(value)
     val result: SaneOption.ControlOptionResult = writeOption(wordValue)
-    Preconditions.checkState(result.`type` eq OptionValueType.FIXED, ("setFixedValue is not appropriate for option of type " + result.`type`): Object)
+    Preconditions.checkState(result.`type` == OptionValueType.FIXED, s"setFixedValue is not appropriate for option of type ${result.`type`}": Object)
 
     SaneWord.fromBytes(result.value).fixedPrecisionValue
   }
@@ -352,7 +352,7 @@ class SaneOption private[jfreesane](val device: SaneDevice,
     Preconditions.checkState(isWriteable, "option is not writeable": Object)
     Preconditions.checkState(isActive, "option is not active": Object)
 
-    val out: SaneOutputStream = device.session.getOutputStream
+    val out: SaneOutputStream = device.session.outputStream
     out.write(SaneRpcCode.SANE_NET_CONTROL_OPTION)
     out.write(device.getHandle.handle)
     out.write(SaneWord.forInt(optionNumber))
@@ -383,7 +383,7 @@ class SaneOption private[jfreesane](val device: SaneDevice,
   @throws[SaneException]
   private def writeOption(value: String): SaneOption.ControlOptionResult = {
     Preconditions.checkState(valueType eq OptionValueType.STRING)
-    val out: SaneOutputStream = device.session.getOutputStream
+    val out: SaneOutputStream = device.session.outputStream
     out.write(SaneRpcCode.SANE_NET_CONTROL_OPTION)
     out.write(SaneWord.forInt(device.getHandle.handle.intValue))
     out.write(SaneWord.forInt(this.optionNumber))
@@ -410,7 +410,7 @@ class SaneOption private[jfreesane](val device: SaneDevice,
     Preconditions.checkState(isWriteable, "option %s is not writeable", name)
     Preconditions.checkState(valueType eq OptionValueType.INT, "option %s is %s-typed, you must use the corresponding methods to set the value", name, valueType)
 
-    val out: SaneOutputStream = device.session.getOutputStream
+    val out: SaneOutputStream = device.session.outputStream
     out.write(SaneRpcCode.SANE_NET_CONTROL_OPTION)
     out.write(device.getHandle.handle)
     out.write(SaneWord.forInt(optionNumber))
@@ -431,7 +431,7 @@ class SaneOption private[jfreesane](val device: SaneDevice,
   private def writeButtonOption: SaneOption.ControlOptionResult = {
     Preconditions.checkState(valueType eq OptionValueType.BUTTON)
 
-    val out: SaneOutputStream = device.session.getOutputStream
+    val out: SaneOutputStream = device.session.outputStream
     out.write(SaneRpcCode.SANE_NET_CONTROL_OPTION)
     out.write(device.getHandle.handle)
     out.write(SaneWord.forInt(this.optionNumber))
@@ -572,8 +572,8 @@ object SaneOption {
     Preconditions.checkState(device.isOpen, "you must open() the device first": Object)
     var options = List[SaneOption]()
     val session: SaneSession = device.session
-    val inputStream: SaneInputStream = session.getInputStream
-    val outputStream: SaneOutputStream = session.getOutputStream
+    val inputStream: SaneInputStream = session.inputStream
+    val outputStream: SaneOutputStream = session.outputStream
 
     // send SANE_NET_GET_OPTION_DESCRIPTORS
     outputStream.write(SaneRpcCode.SANE_NET_GET_OPTION_DESCRIPTORS)
@@ -626,7 +626,7 @@ object SaneOption {
     @throws[IOException]
     @throws[SaneException]
     def fromSession(session: SaneSession): SaneOption.ControlOptionResult = {
-      val stream: SaneInputStream = session.getInputStream
+      val stream: SaneInputStream = session.inputStream
 
       var status: SaneWord = stream.readWord
 

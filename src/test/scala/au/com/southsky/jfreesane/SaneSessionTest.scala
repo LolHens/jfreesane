@@ -36,7 +36,7 @@ import scala.collection.JavaConversions._
 
   @Before
   @throws[Exception]
-  def initSession = this.session = SaneSession.withRemoteSane(InetAddress.getByName("localhost"))
+  def initSession = this.session = SaneSession.apply(InetAddress.getByName("localhost"))
 
   @After
   @throws[Exception]

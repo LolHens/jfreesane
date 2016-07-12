@@ -24,9 +24,9 @@ import com.google.common.base.Strings
   * {@link SaneSession#getPasswordProvider}.
   */
 abstract class SanePasswordProvider {
-  def getUsername(resource: String): String
+  def username(resource: String): String
 
-  def getPassword(resource: String): String
+  def password(resource: String): String
 
   /**
     * Returns {@code true} if this password provider is capable of providing
@@ -40,11 +40,13 @@ object SanePasswordProvider {
     * Returns a {@code SanePasswordProvider} that returns the given username and
     * password.
     */
-  def forUsernameAndPassword(username: String, password: String): SanePasswordProvider =
-    new SanePasswordProvider() {
-      def getUsername(resource: String): String = username
+  def forUsernameAndPassword(_username: String,
+                             _password: String): SanePasswordProvider =
 
-      def getPassword(resource: String): String = password
+    new SanePasswordProvider() {
+      def username(resource: String): String = _username
+
+      def password(resource: String): String = _password
 
       def canAuthenticate(resource: String): Boolean = true
     }

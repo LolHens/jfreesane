@@ -96,9 +96,9 @@ class SaneClientAuthentication(val configurationSource: CharSource) extends Sane
     first.map(credential => new SaneClientAuthentication.ClientCredential(resource, credential.getKey, credential.getValue)).orNull
   }
 
-  def getUsername(resource: String): String = getCredentialForResource(resource).username
+  def username(resource: String): String = getCredentialForResource(resource).username
 
-  def getPassword(resource: String): String = getCredentialForResource(resource).password
+  def password(resource: String): String = getCredentialForResource(resource).password
 }
 
 object SaneClientAuthentication {
