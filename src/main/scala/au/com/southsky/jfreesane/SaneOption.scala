@@ -34,52 +34,52 @@ class SaneOption private[jfreesane](val device: SaneDevice,
                                     optionNumber: Int,
                                     descriptor: SaneOptionDescriptor) {
 
-  if (descriptor.getGroup != null && (valueType ne OptionValueType.GROUP)) {
-    descriptor.getGroup.addOption(this)
+  if (descriptor.group != null && (valueType ne OptionValueType.GROUP)) {
+    descriptor.group.addOption(this)
   }
 
-  def name: String = descriptor.getName
+  def name: String = descriptor.name
 
-  def title: String = descriptor.getTitle
+  def title: String = descriptor.title
 
-  def description: String = descriptor.getDescription
+  def description: String = descriptor.description
 
-  def group: OptionGroup = descriptor.getGroup
+  def group: OptionGroup = descriptor.group
 
-  def `type`: OptionValueType = descriptor.getValueType
+  def `type`: OptionValueType = descriptor.valueType
 
-  def units: SaneOption.OptionUnits = descriptor.getUnits
+  def units: SaneOption.OptionUnits = descriptor.units
 
-  def size: Int = descriptor.getSize
+  def size: Int = descriptor.size
 
-  def valueCount: Int = descriptor.getValueType match {
+  def valueCount: Int = descriptor.valueType match {
     case OptionValueType.BOOLEAN | OptionValueType.STRING => 1
     case OptionValueType.INT | OptionValueType.FIXED => size / SaneWord.sizeBytes
     case OptionValueType.BUTTON | OptionValueType.GROUP =>
-      throw new IllegalStateException("Option type '" + descriptor.getValueType + "' has no value count")
+      throw new IllegalStateException("Option type '" + descriptor.valueType + "' has no value count")
 
     case _ =>
-      throw new IllegalStateException("Option type '" + descriptor.getValueType + "' unknown")
+      throw new IllegalStateException("Option type '" + descriptor.valueType + "' unknown")
 
   }
 
-  def isConstrained = OptionValueConstraintType.NO_CONSTRAINT != descriptor.getConstraintType
+  def isConstrained = OptionValueConstraintType.NO_CONSTRAINT != descriptor.constraintType
 
-  def constraintType: OptionValueConstraintType = descriptor.getConstraintType
+  def constraintType: OptionValueConstraintType = descriptor.constraintType
 
-  def rangeConstraints: RangeConstraint = descriptor.getRangeConstraints
+  def rangeConstraints: RangeConstraint = descriptor.rangeConstraints.get
 
-  def stringConstraints: List[String] = descriptor.getStringConstraints
+  def stringConstraints: List[String] = descriptor.stringConstraints
 
-  def wordConstraints: List[SaneWord] = descriptor.getWordConstraints
+  def wordConstraints: List[SaneWord] = descriptor.wordConstraints
 
-  def integerValueListConstraint: List[Int] = descriptor.getWordConstraints.map(_.integerValue)
+  def integerValueListConstraint: List[Int] = descriptor.wordConstraints.map(_.integerValue)
 
-  def fixedValueListConstraint: List[Double] = descriptor.getWordConstraints.map(_.fixedPrecisionValue)
+  def fixedValueListConstraint: List[Double] = descriptor.wordConstraints.map(_.fixedPrecisionValue)
 
-  override def toString: String = String.format("Option: %s, %s, value type: %s, units: %s", descriptor.getName, descriptor.getTitle, descriptor.getValueType, descriptor.getUnits)
+  override def toString: String = String.format("Option: %s, %s, value type: %s, units: %s", descriptor.name, descriptor.title, descriptor.valueType, descriptor.units)
 
-  private def valueType: OptionValueType = descriptor.getValueType
+  private def valueType: OptionValueType = descriptor.valueType
 
   /**
     * Reads the current boolean value option. This option must be of type
@@ -448,11 +448,11 @@ class SaneOption private[jfreesane](val device: SaneDevice,
     result
   }
 
-  def isActive: Boolean = !descriptor.getOptionCapabilities.contains(OptionCapability.INACTIVE)
+  def isActive: Boolean = !descriptor.optionCapabilities.contains(OptionCapability.INACTIVE)
 
-  def isReadable: Boolean = descriptor.getOptionCapabilities.contains(OptionCapability.SOFT_DETECT)
+  def isReadable: Boolean = descriptor.optionCapabilities.contains(OptionCapability.SOFT_DETECT)
 
-  def isWriteable: Boolean = descriptor.getOptionCapabilities.contains(OptionCapability.SOFT_SELECT)
+  def isWriteable: Boolean = descriptor.optionCapabilities.contains(OptionCapability.SOFT_SELECT)
 }
 
 object SaneOption {

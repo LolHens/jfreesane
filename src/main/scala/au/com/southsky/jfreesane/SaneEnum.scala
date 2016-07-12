@@ -28,7 +28,7 @@ trait SaneEnumObject[T <: SaneEnum[T]] {
     */
   def wireValue(values: Set[T]): Int = values.foldLeft(0)((last, value) => last | value.wireValue)
 
-  def apply(valueType: Int): T = values.find(_.wireValue == valueType).get
+  def apply(wireValue: Int): T = values.find(_.wireValue == wireValue).get
 
   def apply(value: SaneWord): T = this (value.integerValue)
 }

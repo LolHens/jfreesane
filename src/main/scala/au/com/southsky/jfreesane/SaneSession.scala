@@ -3,7 +3,6 @@ package au.com.southsky.jfreesane
 import java.awt.image.BufferedImage
 import java.io.{BufferedInputStream, Closeable, IOException}
 import java.net.{InetAddress, InetSocketAddress, Socket}
-import java.util
 import java.util.concurrent.TimeUnit
 import java.util.logging.{Level, Logger}
 
@@ -62,12 +61,12 @@ class SaneSession @throws[IOException] private(val socket: Socket) extends Close
     * @throws IOException if an error occurred while closing the connection
     */
   @throws[IOException]
-  def close =    try {
-      outputStream.write(SaneRpcCode.SANE_NET_EXIT)
-      outputStream.close
-    } finally {
-      socket.close
-    }
+  def close = try {
+    outputStream.write(SaneRpcCode.SANE_NET_EXIT)
+    outputStream.close
+  } finally {
+    socket.close
+  }
 
 
   @throws[IOException]
