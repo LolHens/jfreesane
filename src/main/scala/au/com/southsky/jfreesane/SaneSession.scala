@@ -3,6 +3,7 @@ package au.com.southsky.jfreesane
 import java.awt.image.BufferedImage
 import java.io.{BufferedInputStream, Closeable, IOException}
 import java.net.{InetAddress, InetSocketAddress, Socket}
+import java.util.concurrent.TimeUnit
 import java.util.logging.{Level, Logger}
 
 import au.com.southsky.jfreesane.device.{SaneDevice, SaneDeviceHandle}
@@ -280,7 +281,7 @@ object SaneSession {
 
     // If the user specifies a non-zero timeout that rounds to 0 milliseconds, set the timeout to 1 millisecond instead.
     if (Duration(millis, MILLISECONDS) != timeout)
-      Logger.getLogger(classOf[SaneSession].getName).log(Level.WARNING, "Specified timeout of {0} {1} rounds to 0ms and was clamped to 1ms", Array(timeout, timeUnit))
+      Logger.getLogger(classOf[SaneSession].getName).log(Level.WARNING, "Specified timeout of {0} {1} rounds to 0ms and was clamped to 1ms", Array(timeout.toMillis, TimeUnit.MILLISECONDS))
 
     val socket: Socket = new Socket
     socket.setTcpNoDelay(true)

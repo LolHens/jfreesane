@@ -1,12 +1,13 @@
 package au.com.southsky.jfreesane
 
 import java.io._
-import java.util
 import java.util.logging.{Level, Logger}
 
 import com.google.common.base.{Charsets, Joiner}
 import com.google.common.collect.{HashBasedTable, Table}
 import com.google.common.io.{CharSource, CharStreams, LineProcessor}
+
+import scala.collection.JavaConversions._
 
 /**
   * Represents the authentication configuration used by SANE clients. The SANE
@@ -20,6 +21,7 @@ import com.google.common.io.{CharSource, CharStreams, LineProcessor}
   */
 class SaneClientAuthentication(val configurationSource: CharSource) extends SanePasswordProvider {
   private val credentials: Table[String, String, String] = HashBasedTable.create()
+  // TODO: Map with tuples
   private var initialized: Boolean = false
 
   def this(path: String) {
@@ -88,7 +90,7 @@ class SaneClientAuthentication(val configurationSource: CharSource) extends Sane
       else
         rc
 
-    val credentialsForResource: util.Map[String, String] = credentials.row(resource)
+    val credentialsForResource: Map[String, String] = credentials.row(resource).toMap
 
     import scala.collection.JavaConversions._
     val first = credentialsForResource.entrySet.headOption

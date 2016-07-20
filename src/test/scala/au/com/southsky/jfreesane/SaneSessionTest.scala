@@ -13,7 +13,7 @@ import au.com.southsky.jfreesane.device.SaneDevice
 import au.com.southsky.jfreesane.enums.{OptionValueConstraintType, OptionValueType, SaneStatus}
 import au.com.southsky.jfreesane.option.SaneOption
 import com.google.common.base.Charsets
-import com.google.common.collect.{ImmutableList, Lists}
+import com.google.common.collect.ImmutableList
 import com.google.common.io.{Closeables, Files}
 import com.google.common.truth.Truth
 import com.google.common.truth.Truth.assertThat
@@ -100,8 +100,6 @@ import scala.collection.JavaConversions._
       val options: List[SaneOption] = device.listOptions
       Assert.assertTrue("Expect multiple SaneOptions", options.size > 0)
       System.out.println("We found " + options.size + " options")
-
-      import scala.collection.JavaConversions._
       for (option <- options) {
         System.out.println(option.toString)
 
@@ -430,10 +428,10 @@ import scala.collection.JavaConversions._
       assertNotNull(option)
       //      assertFalse(option.isConstrained());
       assertEquals(OptionValueType.INT, option.`type`)
-      val values: util.List[Integer] = Lists.newArrayList()
-
-      for (i <- 0 until option.valueCount)
-        values.add(i % 256)
+      val values =
+        (0 until option.valueCount)
+          .map(i => i % 256)
+          .toList
 
       assertEquals(values, option.integerValue = values)
       assertEquals(values, option.integerArrayValue)
@@ -445,16 +443,16 @@ import scala.collection.JavaConversions._
   @Test
   @throws[Exception]
   def pixmaConstraints = {
-    val device: SaneDevice = session.device("pixma")
+    val device = session.device("pixma")
 
     try {
       device.open
 
-      val option: SaneOption = device.option("tl-x")
+      val option = device.option("tl-x")
       assertNotNull(option)
       assertEquals(OptionValueConstraintType.RANGE_CONSTRAINT, option.constraintType)
       assertEquals(OptionValueType.FIXED, option.`type`)
-      val constraint: RangeConstraint = option.rangeConstraints
+      val constraint = option.rangeConstraints
 
       System.out.println(constraint.minFixed)
       System.out.println(constraint.maxFixed)
