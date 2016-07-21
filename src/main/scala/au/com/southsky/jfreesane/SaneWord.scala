@@ -82,11 +82,11 @@ object SaneWord {
     * the SANE build identifier
     */
   def forSaneVersion(major: Int, minor: Int, build: Int): SaneWord =
-    forInt(
-      (major & 0xff) << 24 |
-        (minor & 0xff) << 16 |
-        (build & 0xffff) << 0
-    )
+  forInt(
+    (major & 0xff) << 24 |
+      (minor & 0xff) << 16 |
+      (build & 0xffff) << 0
+  )
 
   /**
     * Creates a new {@link SaneWord} from a copy of the given byte array. The array must be of length
@@ -113,5 +113,5 @@ object SaneWord {
     * {@code someValue}.
     */
   def forFixedPrecision(value: Double): SaneWord =
-    SaneWord.forInt((value * precision).toInt)
+  SaneWord.forInt((value * precision).toInt)
 }

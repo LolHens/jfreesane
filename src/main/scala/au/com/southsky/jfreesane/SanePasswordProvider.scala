@@ -40,16 +40,13 @@ object SanePasswordProvider {
     * Returns a {@code SanePasswordProvider} that returns the given username and
     * password.
     */
-  def forUsernameAndPassword(_username: String,
-                             _password: String): SanePasswordProvider =
+  def forUsernameAndPassword(_username: String, _password: String) = new SanePasswordProvider() {
+    def username(resource: String): String = _username
 
-    new SanePasswordProvider() {
-      def username(resource: String): String = _username
+    def password(resource: String): String = _password
 
-      def password(resource: String): String = _password
-
-      def canAuthenticate(resource: String): Boolean = true
-    }
+    def canAuthenticate(resource: String): Boolean = true
+  }
 
   /**
     * Returns a password provider that uses the {@code ~/.sane/pass} file to
@@ -70,8 +67,8 @@ object SanePasswordProvider {
     * @param passwordFile the path to the password file
     */
   def usingSanePassFile(passwordFile: String): SanePasswordProvider =
-    if (Strings.isNullOrEmpty(passwordFile))
-      new SaneClientAuthentication
-    else
-      new SaneClientAuthentication(passwordFile)
+  if (Strings.isNullOrEmpty(passwordFile))
+    new SaneClientAuthentication
+  else
+    new SaneClientAuthentication(passwordFile)
 }

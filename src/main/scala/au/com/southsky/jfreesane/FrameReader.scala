@@ -48,20 +48,20 @@ class FrameReader(val device: SaneDevice,
         throw new IllegalStateException("TODO: support massive records")
 
       val bytesRead: Int = ByteStreams.copy(ByteStreams.limit(inputStream, length), destination).toInt
-      FrameReader.log.log(Level.FINE, "Read a record of {0} bytes", bytesRead)
+      FrameReader.log.log(Level.FINE, s"Read a record of $bytesRead bytes")
 
       bytesRead
     }
 
-    FrameReader.log.log(Level.FINE, "Reading frame: {0}", this)
+    FrameReader.log.log(Level.FINE, s"Reading frame: ${this}")
 
     // For hand-held scanners where the line count is not known, report an image
     // size of -1 to the user.
     val imageSizeBytes: Option[Int] =
-      if (parameters.lineCount == -1)
-        None
-      else
-        Some(parameters.bytesPerLine * parameters.lineCount)
+    if (parameters.lineCount == -1)
+      None
+    else
+      Some(parameters.bytesPerLine * parameters.lineCount)
 
     val bigArray = new ByteArrayOutputStream(imageSizeBytes.getOrElse(256))
 
@@ -81,12 +81,12 @@ class FrameReader(val device: SaneDevice,
     // Pad image if necessary
     imageSizeBytes match {
       case Some(imageSize) if bigArray.size < imageSize =>
-        val difference: Int = imageSize - bigArray.size
-        FrameReader.log.log(Level.WARNING, "truncated read (got {0}, expected {1} bytes)", Array(bigArray.size, imageSize))
+        val difference = imageSize - bigArray.size
+        FrameReader.log.log(Level.WARNING, s"truncated read (got ${bigArray.size}, expected $imageSize bytes)")
 
         bigArray.write(new Array[Byte](difference))
 
-        FrameReader.log.log(Level.WARNING, "padded image with {0} null bytes", difference)
+        FrameReader.log.log(Level.WARNING, s"padded image with $difference null bytes")
 
       case None =>
     }
@@ -109,7 +109,7 @@ class FrameReader(val device: SaneDevice,
     if (parameters.lineCount <= 0) {
       // register the real height
       parameters.lineCount = outputArray.length / parameters.bytesPerLine
-      FrameReader.log.log(Level.FINE, "Detected new frame line count: {0}", parameters.lineCount)
+      FrameReader.log.log(Level.FINE, s"Detected new frame line count: ${parameters.lineCount}")
     }
 
     new Frame(parameters, outputArray)

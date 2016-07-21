@@ -50,11 +50,11 @@ class SaneClientAuthentication(val configurationSource: CharSource) extends Sane
             val credential: SaneClientAuthentication.ClientCredential = SaneClientAuthentication.ClientCredential.fromAuthString(line)
 
             if (credential == null)
-              SaneClientAuthentication.logger.log(Level.WARNING, "ignoring invalid configuration format (line {0}): {1}", Array(lineNumber, line))
+              SaneClientAuthentication.logger.log(Level.WARNING, s"ignoring invalid configuration format (line $lineNumber): $line")
             else {
               credentials.put(credential.backend, credential.username, credential.password)
               if (credentials.row(credential.backend).size > 1)
-                SaneClientAuthentication.logger.log(Level.WARNING, "ignoring line {0}, we already have a configuration for resource [{1}]", Array(lineNumber, credential.backend))
+                SaneClientAuthentication.logger.log(Level.WARNING, s"ignoring line $lineNumber, we already have a configuration for resource [${credential.backend}]")
             }
             true
           }

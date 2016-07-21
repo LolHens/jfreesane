@@ -89,9 +89,11 @@ class SaneSession @throws[IOException] private(val socket: Socket) extends Close
 
     if (!resource.isEmpty) {
       authorize(resource)
+
       status = inputStream.readWord
       if (status.intValue != 0)
         throw SaneException(SaneStatus.fromWireValue(status.intValue))
+
       handle = inputStream.readWord
       resource = inputStream.readString
     }
@@ -180,7 +182,7 @@ class SaneSession @throws[IOException] private(val socket: Socket) extends Close
   }
 
   @throws[IOException]
-  private[jfreesane] def closeDevice(handle: SaneDeviceHandle) {
+  private[jfreesane] def closeDevice(handle: SaneDeviceHandle) = {
     // RPC code
     outputStream.write(SaneRpcCode.SANE_NET_CLOSE)
     outputStream.write(handle.handle)
@@ -191,7 +193,7 @@ class SaneSession @throws[IOException] private(val socket: Socket) extends Close
   }
 
   @throws[IOException]
-  private[jfreesane] def cancelDevice(handle: SaneDeviceHandle) {
+  private[jfreesane] def cancelDevice(handle: SaneDeviceHandle) = {
     // RPC code
     outputStream.write(SaneRpcCode.SANE_NET_CANCEL)
     outputStream.write(handle.handle)
@@ -202,7 +204,7 @@ class SaneSession @throws[IOException] private(val socket: Socket) extends Close
   }
 
   @throws[IOException]
-  private def initSane {
+  private def initSane = {
     // RPC code
     outputStream.write(SaneRpcCode.SANE_NET_INIT)
 
@@ -223,7 +225,7 @@ class SaneSession @throws[IOException] private(val socket: Socket) extends Close
     * if an error occurs while communicating with the SANE daemon
     */
   @throws[IOException]
-  private[jfreesane] def authorize(resource: String) {
+  private[jfreesane] def authorize(resource: String) = {
     if (passwordProvider == null)
       throw new IOException("Authorization failed - no password provider present " + "(you must call setPasswordProvider)")
 
@@ -250,7 +252,7 @@ class SaneSession @throws[IOException] private(val socket: Socket) extends Close
     * @throws IOException
     */
   @throws[IOException]
-  private def writePassword(resource: String, password: String) {
+  private def writePassword(resource: String, password: String) = {
     val resourceParts: Array[String] = resource.split("\\$MD5\\$")
 
     if (resourceParts.length == 1)

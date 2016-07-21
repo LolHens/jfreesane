@@ -22,20 +22,14 @@ import java.security.{MessageDigest, NoSuchAlgorithmException}
 object SanePasswordEncoder {
   private[jfreesane] val iso8859_1: Charset = Charset.forName("ISO-8859-1")
 
-  def encodedLatin1(charArray: Array[Char]): Array[Byte] = iso8859_1.encode(CharBuffer.wrap(charArray)).array
+  def encodedLatin1(charArray: Array[Char]): Array[Byte] =
+    iso8859_1.encode(CharBuffer.wrap(charArray)).array
 
-  private def encodeAsHex(input: Array[Byte]): String = {
-    val hexString: StringBuilder = new StringBuilder
-
-    for (i <- 0 until input.length) {
+  private def encodeAsHex(input: Array[Byte]): String =
+    input.indices.map { i =>
       val hex = Integer.toHexString(0xff & input(i))
-      if (hex.length() == 1)
-        hexString.append('0')
-      hexString.append(hex)
-    }
-
-    hexString.toString
-  }
+      if (hex.length == 1) s"0$hex" else hex
+    }.mkString
 
   def derivePassword(salt: String, password: String): String =
     try {
@@ -48,8 +42,4 @@ object SanePasswordEncoder {
         // This is not expected, so convert to RuntimeException
         throw new RuntimeException(ex)
     }
-}
-
-// Not to be instantiated.
-class SanePasswordEncoder private {
 }

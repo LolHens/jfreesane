@@ -1,10 +1,8 @@
 package au.com.southsky.jfreesane
 
-import java.util
 import java.util.concurrent.TimeUnit
 
 import au.com.southsky.jfreesane.device.SaneDevice
-import com.google.common.collect.Maps
 
 /**
   * A static factory of listeners that limit the rate at which they send
@@ -46,26 +44,35 @@ object RateLimitingScanListeners {
   def noMoreFrequentlyThan(listener: ScanListener,
                            time: Long,
                            timeUnit: TimeUnit): ScanListener =
-    new ScanListener() {
-      private val lastSentTime: util.Map[SaneDevice, Long] = Maps.newHashMapWithExpectedSize(1)
+  new ScanListener() {
+    private var lastSentTimes = Map[SaneDevice, Long]()
 
-      def scanningStarted(device: SaneDevice) = listener.scanningStarted(device)
+    def scanningStarted(device: SaneDevice) = listener.scanningStarted(device)
 
-      def frameAcquisitionStarted(device: SaneDevice, parameters: SaneParameters, currentFrame: Int, likelyTotalFrames: Int) =
-        listener.frameAcquisitionStarted(device, parameters, currentFrame, likelyTotalFrames)
+    def frameAcquisitionStarted(device: SaneDevice, parameters: SaneParameters, currentFrame: Int, likelyTotalFrames: Int) =
+      listener.frameAcquisitionStarted(device, parameters, currentFrame, likelyTotalFrames)
 
-      def recordRead(device: SaneDevice, totalBytesRead: Int, imageSizeBytes: Option[Int]) = {
-        val currentTime: Long = System.currentTimeMillis
+    def recordRead(device: SaneDevice, totalBytesRead: Int, imageSizeBytes: Option[Int]) = {
+      val currentTime: Long = System.currentTimeMillis
 
-        if (!lastSentTime.containsKey(device))
-          lastSentTime.put(device, 0L)
+      val lastSentTime = lastSentTimes.get(device) match {
+        case Some(lastSentTime) =>
+          lastSentTime
 
-        if (currentTime - lastSentTime.get(device) > timeUnit.toMillis(time)) {
-          lastSentTime.put(device, currentTime)
-          listener.recordRead(device, totalBytesRead, imageSizeBytes)
-        }
+        case None =>
+          val initialValue: Long = 0
+          lastSentTimes = lastSentTimes + (device -> initialValue)
+
+          initialValue
       }
 
-      def scanningFinished(device: SaneDevice) = listener.scanningFinished(device)
+
+      if (currentTime - lastSentTime > timeUnit.toMillis(time)) {
+        lastSentTimes = lastSentTimes + (device -> currentTime)
+        listener.recordRead(device, totalBytesRead, imageSizeBytes)
+      }
     }
+
+    def scanningFinished(device: SaneDevice) = listener.scanningFinished(device)
+  }
 }
