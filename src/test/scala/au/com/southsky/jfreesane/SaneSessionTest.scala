@@ -454,7 +454,7 @@ class SaneSessionTest {
 
       val option: SaneOption = device.option("int-constraint-array-constraint-range")
       assertNotNull(option)
-      Truth.assertThat(option.isConstrained).isTrue()
+      Truth.assertThat(java.lang.Boolean.valueOf(option.isConstrained)).isTrue()
       Truth.assertThat(option.constraintType).isEqualTo(OptionValueConstraintType.RANGE_CONSTRAINT)
       assertEquals(OptionValueType.INT, option.`type`)
 

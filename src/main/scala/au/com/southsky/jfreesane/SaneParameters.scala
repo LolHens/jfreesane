@@ -9,7 +9,7 @@ class SaneParameters(frame: Int,
                      val pixelsPerLine: Int,
                      private var _lineCount: Int,
                      val depthPerPixel: Int) {
-  val frameType: FrameType = FrameType(frame)
+  val frameType = FrameType(frame)
 
   def lineCount: Int = _lineCount
 

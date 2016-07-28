@@ -157,7 +157,7 @@ class SaneImage private(_frames: List[Frame],
         buffers(i) = new Array[Short](bank.length / stride)
         for (j <- buffers(i).indices) {
           buffers(i)(j) = ((bank(stride * j) & 0xFF) << java.lang.Byte.SIZE).toShort
-          buffers(i)(j) |= (bank(stride * j + 1) & 0xFF).toShort
+          buffers(i)(j) = (buffers(i)(j) | (bank(stride * j + 1) & 0xFF).toShort).toShort
         }
       }
 
