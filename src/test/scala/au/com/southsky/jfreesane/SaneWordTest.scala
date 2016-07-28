@@ -2,7 +2,6 @@ package au.com.southsky.jfreesane
 
 import java.io.{ByteArrayInputStream, IOException, InputStream}
 
-import com.google.common.truth.Truth
 import org.junit.Assert.assertEquals
 import org.junit.rules.ExpectedException
 import org.junit.{Rule, Test}
@@ -32,11 +31,11 @@ class SaneWordTest {
   def fromStream = {
     val array: Array[Byte] = Array[Byte](0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 2, 0, 0, 0, 3, 0, 0, 0, 4)
     val stream: InputStream = new ByteArrayInputStream(array)
-    Truth.assertThat(Integer.valueOf(SaneWord.fromStream(stream).intValue)).comparesEqualTo(0)
-    Truth.assertThat(Integer.valueOf(SaneWord.fromStream(stream).intValue)).comparesEqualTo(1)
-    Truth.assertThat(Integer.valueOf(SaneWord.fromStream(stream).intValue)).comparesEqualTo(2)
-    Truth.assertThat(Integer.valueOf(SaneWord.fromStream(stream).intValue)).comparesEqualTo(3)
-    Truth.assertThat(Integer.valueOf(SaneWord.fromStream(stream).intValue)).comparesEqualTo(4)
+    Truth2.assertThat(SaneWord.fromStream(stream).intValue).comparesEqualTo(0)
+    Truth2.assertThat(SaneWord.fromStream(stream).intValue).comparesEqualTo(1)
+    Truth2.assertThat(SaneWord.fromStream(stream).intValue).comparesEqualTo(2)
+    Truth2.assertThat(SaneWord.fromStream(stream).intValue).comparesEqualTo(3)
+    Truth2.assertThat(SaneWord.fromStream(stream).intValue).comparesEqualTo(4)
 
     /*try {
       SaneWord.fromStream(stream)

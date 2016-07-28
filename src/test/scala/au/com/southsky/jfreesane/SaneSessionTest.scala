@@ -97,7 +97,7 @@ class SaneSessionTest {
 
     try {
       device.open
-      Truth.assertThat(java.lang.Boolean.valueOf(device.optionGroups.nonEmpty)).isTrue()
+      Truth2.assertThat(device.optionGroups.nonEmpty).isTrue()
     } finally {
       device.close
     }
@@ -231,7 +231,7 @@ class SaneSessionTest {
             throw e
       }
 
-    Truth.assertThat(java.lang.Boolean.valueOf(thrown)).isTrue
+    Truth2.assertThat(thrown).isTrue()
     device.acquireImage
   }
 
@@ -341,10 +341,10 @@ class SaneSessionTest {
       device.open
 
       val option: SaneOption = device.option("hand-scanner")
-      assertThat(java.lang.Boolean.valueOf(option.booleanValue = true)).isTrue
-      assertThat(java.lang.Boolean.valueOf(option.booleanValue)).isTrue
-      assertThat(java.lang.Boolean.valueOf(option.booleanValue = false)).isFalse
-      assertThat(java.lang.Boolean.valueOf(option.booleanValue)).isFalse
+      Truth2.assertThat(option.booleanValue = true).isTrue
+      Truth2.assertThat(option.booleanValue).isTrue
+      Truth2.assertThat(option.booleanValue = false).isFalse
+      Truth2.assertThat(option.booleanValue).isFalse
     } finally {
       device.close
     }
@@ -454,7 +454,7 @@ class SaneSessionTest {
 
       val option: SaneOption = device.option("int-constraint-array-constraint-range")
       assertNotNull(option)
-      Truth.assertThat(java.lang.Boolean.valueOf(option.isConstrained)).isTrue()
+      Truth2.assertThat(option.isConstrained).isTrue()
       Truth.assertThat(option.constraintType).isEqualTo(OptionValueConstraintType.RANGE_CONSTRAINT)
       assertEquals(OptionValueType.INT, option.`type`)
 
