@@ -48,7 +48,7 @@ class SaneImage private(_frames: List[Frame],
         new Point(0, 0))
 
       val model: ColorModel = new ComponentColorModel(
-        ColorSpace.getInstance(ColorSpace.CS_LINEAR_RGB),
+        ColorSpace.getInstance(ColorSpace.CS_sRGB),
         false,
         false,
         Transparency.OPAQUE,
@@ -61,7 +61,7 @@ class SaneImage private(_frames: List[Frame],
     // Otherwise we're in a one-frame situation
     if (depthPerPixel == 1)
       if (frames.head.`type` == FrameType.GRAY)
-        decodeSingleBitGrayscaleImage
+        decodeSingleBitGrayscaleImage(buffer)
       else
         decodeSingleBitColorImage
 
@@ -69,52 +69,53 @@ class SaneImage private(_frames: List[Frame],
       var colorSpace: ColorSpace = null
       var bandOffsets: Array[Int] = null
 
-      val bytesPerSample: Int = depthPerPixel / java.lang.Byte.SIZE
-
       if (frames.head.`type` == FrameType.GRAY) {
         colorSpace = ColorSpace.getInstance(ColorSpace.CS_GRAY)
         bandOffsets = Array(0)
-      }
-      else {
-        colorSpace = ColorSpace.getInstance(ColorSpace.CS_LINEAR_RGB)
-        bandOffsets = Array(0, 1 * bytesPerSample, 2 * bytesPerSample)
+      } else {
+        colorSpace = ColorSpace.getInstance(ColorSpace.CS_sRGB)
+        bandOffsets = Array(0, 1, 2)
       }
 
-      val raster: WritableRaster = Raster.createInterleavedRaster(buffer, width, height, bytesPerLine,
-        bytesPerSample * bandOffsets.length, bandOffsets, new Point(0, 0))
+      val raster: WritableRaster = Raster.createInterleavedRaster(
+        buffer,
+        width,
+        height,
+        bytesPerLine * java.lang.Byte.SIZE / depthPerPixel,
+        bandOffsets.length,
+        bandOffsets,
+        new Point(0, 0)
+      )
 
       val model: ColorModel = new ComponentColorModel(
         colorSpace,
         false,
         false,
         Transparency.OPAQUE,
-        DataBuffer.TYPE_BYTE)
+        if (depthPerPixel == 8) DataBuffer.TYPE_BYTE else DataBuffer.TYPE_USHORT
+      )
 
       new BufferedImage(model, raster, false, null)
     }
     throw new IllegalStateException("Unsupported SaneImage type")
   }
 
-  private def decodeSingleBitGrayscaleImage: BufferedImage = {
-    val data: Array[Byte] = frames.head.data
-    val image: BufferedImage = new BufferedImage(width, height, BufferedImage.TYPE_INT_RGB)
+  private def decodeSingleBitGrayscaleImage(buffer: DataBuffer): BufferedImage = {
+    val colorModel = new IndexColorModel(
+      1,
+      2,
+      Array[Byte](0xFF.toByte, 0),
+      Array[Byte](0xFF.toByte, 0),
+      Array[Byte](0xFF.toByte, 0)
+    )
 
-    for (y <- 0 until height)
-      for (x <- 0 until width) {
-        val lineStartByte = y * bytesPerLine
-        val offsetWithinLine = x / java.lang.Byte.SIZE
-        val offsetWithinByte = 1 << (java.lang.Byte.SIZE - (x % java.lang.Byte.SIZE) - 1)
+    val raster = Raster.createPackedRaster(buffer, width, height, 1, new Point(0, 0))
 
-        // for a GRAY frame of single bit depth, the value is intensity: 1 is lowest intensity (black), 0 is highest (white)
-        val rgb = if ((data(lineStartByte + offsetWithinLine) & offsetWithinByte) == 0) 0xffffff else 0
-        image.setRGB(x, y, rgb)
-      }
-
-    image
+    new BufferedImage(colorModel, raster, false, null)
   }
 
   private def decodeSingleBitColorImage: BufferedImage = {
-    val data: Array[Byte] = frames(0).data
+    val data: Array[Byte] = frames.head.data
     val image: BufferedImage = new BufferedImage(width, height, BufferedImage.TYPE_INT_RGB)
 
     val componentCount: Int = 3 // red, green, blue. One bit per sample, byte interleaved
@@ -139,14 +140,29 @@ class SaneImage private(_frames: List[Frame],
     image
   }
 
-  private def asDataBuffer: DataBuffer = {
-    val buffers: Array[Array[Byte]] = new Array[Array[Byte]](frames.size)
+  private def asDataBuffer: DataBuffer =
+    if (depthPerPixel == 1 || depthPerPixel == 8) {
+      val buffers = new Array[Array[Byte]](frames.size)
 
-    for (i <- frames.indices)
-      buffers(i) = frames(i).data
+      for (i <- frames.indices)
+        buffers(i) = frames(i).data
 
-    new DataBufferByte(buffers, frames.head.data.length)
-  }
+      new DataBufferByte(buffers, frames.head.data.length)
+    } else {
+      val buffers = new Array[Array[Short]](frames.size)
+      val stride: Int = java.lang.Short.SIZE / java.lang.Byte.SIZE
+
+      for (i <- frames.indices) {
+        val bank = frames(i).data
+        buffers(i) = new Array[Short](bank.length / stride)
+        for (j <- buffers(i).indices) {
+          buffers(i)(j) = ((bank(stride * j) & 0xFF) << java.lang.Byte.SIZE).toShort
+          buffers(i)(j) |= (bank(stride * j + 1) & 0xFF).toShort
+        }
+      }
+
+      new DataBufferUShort(buffers, frames.head.data.length / stride)
+    }
 }
 
 object SaneImage {

@@ -4,7 +4,8 @@ import java.io.{ByteArrayInputStream, IOException, InputStream}
 
 import com.google.common.truth.Truth
 import org.junit.Assert.assertEquals
-import org.junit.{Assert, Test}
+import org.junit.rules.ExpectedException
+import org.junit.{Rule, Test}
 
 /**
   * This class implements tests for {@link SaneWord}.
@@ -12,6 +13,8 @@ import org.junit.{Assert, Test}
   * @author James Ring (sjr@jdns.org)
   */
 class SaneWordTest {
+  @Rule val expectedException = ExpectedException.none()
+
   @Test def testFixedPrecisionValue =
     assertEquals(216.069, SaneWord.forFixedPrecision(216.069).fixedPrecisionValue, 0.0001)
 
@@ -35,12 +38,15 @@ class SaneWordTest {
     Truth.assertThat(Integer.valueOf(SaneWord.fromStream(stream).intValue)).comparesEqualTo(3)
     Truth.assertThat(Integer.valueOf(SaneWord.fromStream(stream).intValue)).comparesEqualTo(4)
 
-    try {
+    /*try {
       SaneWord.fromStream(stream)
       Assert.fail("fromStream should have thrown IOException but didn't")
     } catch {
       case expected: IOException =>
       // Expected this exception.
-    }
+    }*/
+
+    expectedException.expect(classOf[IOException])
+    SaneWord.fromStream(stream)
   }
 }
