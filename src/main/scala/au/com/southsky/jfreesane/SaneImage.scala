@@ -68,16 +68,11 @@ class SaneImage private(_frames: List[Frame],
     if (depthPerPixel == 8 || depthPerPixel == 16) {
       val colorSpace = ColorSpace.getInstance(ColorSpace.CS_sRGB)
 
-      var bandOffsets: Array[Int] = null
-      var scanlineStride: Int = 0
-
-      if (frames.head.`type` == FrameType.GRAY) {
-        bandOffsets = Array[Int](0, 0, 0)
-        scanlineStride = 1
-      } else {
-        bandOffsets = Array(0, 1, 2)
-        scanlineStride = 3
-      }
+      val (bandOffsets, scanlineStride) =
+        if (frames.head.`type` == FrameType.GRAY)
+          (Array(0, 0, 0), 1)
+        else
+          (Array(0, 1, 2), 3)
 
       val raster: WritableRaster = Raster.createInterleavedRaster(
         buffer,
@@ -99,6 +94,7 @@ class SaneImage private(_frames: List[Frame],
 
       new BufferedImage(model, raster, false, null)
     }
+
     throw new IllegalStateException("Unsupported SaneImage type")
   }
 
@@ -132,9 +128,10 @@ class SaneImage private(_frames: List[Frame],
         val green = (data(lineStartByte + offsetWithinLine + 1) & offsetWithinByte) != 0
         val blue = (data(lineStartByte + offsetWithinLine + 2) & offsetWithinByte) != 0
 
-        var rgb = if (red) 0xff0000 else 0
-        rgb = rgb | (if (green) 0x00ff00 else 0)
-        rgb = rgb | (if (blue) 0x0000ff else 0)
+        val rgb =
+          (if (red) 0xff0000 else 0) |
+            (if (green) 0x00ff00 else 0) |
+            (if (blue) 0x0000ff else 0)
 
         image.setRGB(x, y, rgb)
       }
@@ -156,7 +153,9 @@ class SaneImage private(_frames: List[Frame],
 
       for (i <- frames.indices) {
         val bank = frames(i).data
+
         buffers(i) = new Array[Short](bank.length / stride)
+
         for (j <- buffers(i).indices) {
           buffers(i)(j) = ((bank(stride * j) & 0xFF) << java.lang.Byte.SIZE).toShort
           buffers(i)(j) = (buffers(i)(j) | (bank(stride * j + 1) & 0xFF).toShort).toShort
@@ -174,50 +173,56 @@ object SaneImage {
   class Builder {
     private var frames = List[Frame]()
     private var frameTypes = Set[FrameType]()
-    private val depthPerPixel: WriteOnce[Integer] = new WriteOnce[Integer]
-    private val width: WriteOnce[Integer] = new WriteOnce[Integer]
-    private val height: WriteOnce[Integer] = new WriteOnce[Integer]
-    private val bytesPerLine: WriteOnce[Integer] = new WriteOnce[Integer]
+    private val _depthPerPixel = new WriteOnce[Int]
+    private val _width = new WriteOnce[Int]
+    private val _height = new WriteOnce[Int]
+    private val _bytesPerLine = new WriteOnce[Int]
 
     def addFrame(frame: Frame) {
       Preconditions.checkArgument(!frameTypes.contains(frame.`type`), "Image already contains a frame of this type": Object)
       Preconditions.checkArgument(frameTypes.isEmpty || !singletonFrameTypes.contains(frame.`type`), "The frame type is singleton but this image " + "contains another frame": Object)
       Preconditions.checkArgument(frames.isEmpty || frames.head.data.length == frame.data.length, "new frame has an inconsistent size": Object)
-      setPixelDepth(frame.pixelDepth)
-      setBytesPerLine(frame.bytesPerLine)
-      setWidth(frame.width)
-      setHeight(frame.height)
+      depthPerPixel = frame.pixelDepth
+      bytesPerLine = frame.bytesPerLine
+      width = frame.width
+      height = frame.height
       frameTypes = frameTypes + frame.`type`
       frames = frames :+ frame
     }
 
-    def setPixelDepth(depthPerPixel: Int) {
-      Preconditions.checkArgument(depthPerPixel > 0, "depth must be positive": Object)
-      this.depthPerPixel.set(depthPerPixel)
+    def depthPerPixel = _depthPerPixel()
+
+    def depthPerPixel_=(value: Int) = {
+      Preconditions.checkArgument(value > 0, "depth must be positive": Object)
+      _depthPerPixel.set(value)
     }
 
-    def setWidth(width: Int) {
-      this.width.set(width)
-    }
+    def width = _width()
 
-    def setHeight(height: Int) = this.height.set(height)
+    def width_=(value: Int) = _width.set(value)
 
-    def setBytesPerLine(bytesPerLine: Int) = this.bytesPerLine.set(bytesPerLine)
+    def height = _height()
+
+    def height_=(value: Int) = _height.set(value)
+
+    def bytesPerLine = _bytesPerLine()
+
+    def bytesPerLine_=(value: Int) = _bytesPerLine.set(value)
 
     def build: SaneImage = {
       Preconditions.checkState(frames.nonEmpty, "no frames": Object)
-      Preconditions.checkState(depthPerPixel() != null, "setPixelDepth must be called": Object)
-      Preconditions.checkState(width() != null, "setWidth must be called": Object)
-      Preconditions.checkState(height() != null, "setHeight must be called": Object)
-      Preconditions.checkState(bytesPerLine() != null, "setBytesPerLine must be called": Object)
+      Preconditions.checkState(_depthPerPixel.nonEmpty, "setPixelDepth must be called": Object)
+      Preconditions.checkState(_width.nonEmpty, "setWidth must be called": Object)
+      Preconditions.checkState(_height.nonEmpty, "setHeight must be called": Object)
+      Preconditions.checkState(_bytesPerLine.nonEmpty, "setBytesPerLine must be called": Object)
 
       // does the image contains a single instance of a singleton frame?
       if (frames.size == 1 && singletonFrameTypes.contains(frames.head.`type`))
-        new SaneImage(frames, depthPerPixel(), width(), height(), bytesPerLine())
+        new SaneImage(frames, depthPerPixel, width, height, bytesPerLine)
 
       // otherwise, does it contain a red, green and blue frame?
       else if (frames.size == redGreenBlueFrameTypes.size && frameTypes.forall(redGreenBlueFrameTypes.contains))
-        new SaneImage(frames, depthPerPixel(), width(), height(), bytesPerLine())
+        new SaneImage(frames, depthPerPixel, width, height, bytesPerLine)
       else
         throw new IllegalStateException("Image is not fully constructed. Frame types present: " + frameTypes)
     }

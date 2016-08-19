@@ -13,6 +13,10 @@ class WriteOnce[T] {
 
   def apply(): T = _value.getOrElse(Default[T])
 
+  def isEmpty = _value.isEmpty
+
+  def nonEmpty = !isEmpty
+
   object Default {
     def apply[A]: A = {
       class Default {
