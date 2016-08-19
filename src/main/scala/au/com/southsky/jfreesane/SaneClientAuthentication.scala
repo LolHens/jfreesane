@@ -47,15 +47,15 @@ class SaneClientAuthentication(val configurationSource: CharSource) extends Sane
           def processLine(line: String): Boolean = {
             lineNumber += 1
 
-            val credential: SaneClientAuthentication.ClientCredential = SaneClientAuthentication.ClientCredential.fromAuthString(line)
+            val credential = SaneClientAuthentication.ClientCredential.fromAuthString(line)
 
-            if (credential == null)
-              SaneClientAuthentication.logger.log(Level.WARNING, s"ignoring invalid configuration format (line $lineNumber): $line")
-            else {
+            if (credential != null) {
               credentials.put(credential.backend, credential.username, credential.password)
               if (credentials.row(credential.backend).size > 1)
                 SaneClientAuthentication.logger.log(Level.WARNING, s"ignoring line $lineNumber, we already have a configuration for resource [${credential.backend}]")
-            }
+            } else
+              SaneClientAuthentication.logger.log(Level.WARNING, s"ignoring invalid configuration format (line $lineNumber): $line")
+
             true
           }
 
@@ -73,12 +73,11 @@ class SaneClientAuthentication(val configurationSource: CharSource) extends Sane
     * resource.
     */
   def canAuthenticate(resource: String): Boolean = {
-    if (resource == null)
-      false
-    else {
+    if (resource != null) {
       val credential: SaneClientAuthentication.ClientCredential = getCredentialForResource(resource)
       credential != null
-    }
+    } else
+      false
   }
 
   def getCredentialForResource(rc: String): SaneClientAuthentication.ClientCredential = {
@@ -92,10 +91,12 @@ class SaneClientAuthentication(val configurationSource: CharSource) extends Sane
 
     val credentialsForResource: Map[String, String] = credentials.row(resource).toMap
 
-    import scala.collection.JavaConversions._
-    val first = credentialsForResource.entrySet.headOption
-
-    first.map(credential => new SaneClientAuthentication.ClientCredential(resource, credential.getKey, credential.getValue)).orNull
+    credentialsForResource
+      .entrySet
+      .headOption
+      .map { credential =>
+        new SaneClientAuthentication.ClientCredential(resource, credential.getKey, credential.getValue)
+      }.orNull
   }
 
   def username(resource: String): String = getCredentialForResource(resource).username
@@ -104,11 +105,11 @@ class SaneClientAuthentication(val configurationSource: CharSource) extends Sane
 }
 
 object SaneClientAuthentication {
-  private val logger: Logger = Logger.getLogger(classOf[SaneClientAuthentication].getName)
+  private val logger = Logger.getLogger(classOf[SaneClientAuthentication].getName)
 
-  val MARKER_MD5: String = "$MD5$"
+  val MARKER_MD5 = "$MD5$"
 
-  private val DEFAULT_CONFIGURATION_PATH: String = Joiner.on(File.separator).join(System.getProperty("user.home"), ".sane", "pass")
+  private val DEFAULT_CONFIGURATION_PATH = Joiner.on(File.separator).join(System.getProperty("user.home"), ".sane", "pass")
 
   /**
     * Class to hold Sane client credentials organised by backend.

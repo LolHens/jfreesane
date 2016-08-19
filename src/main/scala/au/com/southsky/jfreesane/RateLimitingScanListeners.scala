@@ -62,10 +62,8 @@ object RateLimitingScanListeners {
         case None =>
           val initialValue: Long = 0
           lastSentTimes = lastSentTimes + (device -> initialValue)
-
           initialValue
       }
-
 
       if (currentTime - lastSentTime > timeUnit.toMillis(time)) {
         lastSentTimes = lastSentTimes + (device -> currentTime)

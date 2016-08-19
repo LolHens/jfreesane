@@ -1,6 +1,7 @@
 package au.com.southsky.jfreesane
 
 import java.io._
+import java.util
 import java.util.Arrays
 
 import com.google.common.base.Preconditions
@@ -35,7 +36,7 @@ final class SaneWord(val bytes: Array[Byte]) {
     */
   def fixedPrecisionValue: Double = intValue.toDouble / SaneWord.precision
 
-  override def toString: String = Arrays.toString(bytes)
+  override def toString = util.Arrays.toString(bytes)
 }
 
 object SaneWord {
@@ -51,7 +52,7 @@ object SaneWord {
     * {@link InputStream}.
     */
   @throws[IOException]
-  def fromStream(input: InputStream): SaneWord = {
+  def fromStream(input: InputStream) = {
     val newValue = new Array[Byte](sizeBytes)
 
     if (ByteStreams.read(input, newValue, 0, newValue.length) != newValue.length)
@@ -63,7 +64,7 @@ object SaneWord {
   /**
     * Returns a new {@code SaneWord} representing the given integer value.
     */
-  def forInt(value: Int): SaneWord = {
+  def forInt(value: Int) = {
     val byteStream: ByteArrayOutputStream = new ByteArrayOutputStream(sizeBytes)
 
     new DataOutputStream(byteStream).writeInt(value)
@@ -81,8 +82,7 @@ object SaneWord {
     * @param build
     * the SANE build identifier
     */
-  def forSaneVersion(major: Int, minor: Int, build: Int): SaneWord =
-  forInt(
+  def forSaneVersion(major: Int, minor: Int, build: Int) = SaneWord.forInt(
     (major & 0xff) << 24 |
       (minor & 0xff) << 16 |
       (build & 0xffff) << 0
@@ -92,14 +92,14 @@ object SaneWord {
     * Creates a new {@link SaneWord} from a copy of the given byte array. The array must be of length
     * {@link #SIZE_IN_BYTES}, anything else will cause a runtime exception to be thrown.
     */
-  def fromBytes(byteValue: Array[Byte]): SaneWord = fromBytes(byteValue, 0)
+  def fromBytes(byteValue: Array[Byte]): SaneWord = SaneWord.fromBytes(byteValue, 0)
 
   /**
     * Creates a new {@link SaneWord} from a copy of the given bytes within the array.
     * {@code offset + SIZE_IN_BYTES} must be a valid index (i.e. there must be enough bytes in the
     * array at the given offset), otherwise a runtime exception is thrown.
     */
-  def fromBytes(byteValue: Array[Byte], offset: Int): SaneWord = {
+  def fromBytes(byteValue: Array[Byte], offset: Int) = {
     Preconditions.checkArgument(offset >= 0, "offset must be positive or zero": Object)
     Preconditions.checkArgument(offset + sizeBytes <= byteValue.length)
 
@@ -112,6 +112,5 @@ object SaneWord {
     * {@code SaneWord.forFixedPrecision(someValue).fixedPrecisionValue()} will not necessarily yield
     * {@code someValue}.
     */
-  def forFixedPrecision(value: Double): SaneWord =
-  SaneWord.forInt((value * precision).toInt)
+  def forFixedPrecision(value: Double) = SaneWord.forInt((value * precision).toInt)
 }

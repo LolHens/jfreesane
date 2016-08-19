@@ -20,7 +20,7 @@ class FrameReader(val device: SaneDevice,
 
   @throws[IOException]
   @throws[SaneException]
-  def readFrame: Frame = {
+  def readFrame = {
     @throws[IOException]
     @throws[SaneException]
     def readRecord(destination: OutputStream): Int = {
@@ -41,16 +41,17 @@ class FrameReader(val device: SaneDevice,
           if (saneStatus != null && (saneStatus ne SaneStatus.STATUS_EOF))
             throw SaneException(saneStatus)
         }
-        return -1
+
+        -1
+      } else {
+        if (UnsignedInteger.fromIntBits(length).longValue > Integer.MAX_VALUE)
+          throw new IllegalStateException("TODO: support massive records")
+
+        val bytesRead = ByteStreams.copy(ByteStreams.limit(inputStream, length), destination).toInt
+        FrameReader.log.log(Level.FINE, s"Read a record of $bytesRead bytes")
+
+        bytesRead
       }
-
-      if (UnsignedInteger.fromIntBits(length).longValue > Integer.MAX_VALUE)
-        throw new IllegalStateException("TODO: support massive records")
-
-      val bytesRead: Int = ByteStreams.copy(ByteStreams.limit(inputStream, length), destination).toInt
-      FrameReader.log.log(Level.FINE, s"Read a record of $bytesRead bytes")
-
-      bytesRead
     }
 
     FrameReader.log.log(Level.FINE, s"Reading frame: ${this}")
@@ -72,10 +73,8 @@ class FrameReader(val device: SaneDevice,
       bytesRead = readRecord(bigArray)
       bytesRead >= 0
     }) {
-      {
-        totalBytesRead += bytesRead
-        listener.recordRead(device, totalBytesRead, imageSizeBytes)
-      }
+      totalBytesRead += bytesRead
+      listener.recordRead(device, totalBytesRead, imageSizeBytes)
     }
 
     // Pad image if necessary
@@ -92,20 +91,19 @@ class FrameReader(val device: SaneDevice,
     }
 
     // Now, if necessary, put the bytes in the correct order according to the stream's endianness
-    val outputArray: Array[Byte] = bigArray.toByteArray
+    val outputArray = bigArray.toByteArray
+
     if (parameters.depthPerPixel == 16 && !bigEndian) {
       if (outputArray.length % 2 != 0)
         throw new IOException("expected a multiple of 2 frame length")
 
-      var i: Int = 0
-      while (i < outputArray.length) {
+      for (i <- 0 until outputArray.length by 2) {
         val swap: Byte = outputArray(i)
         outputArray(i) = outputArray(i + 1)
         outputArray(i + 1) = swap
-
-        i += 2
       }
     }
+
     if (parameters.lineCount <= 0) {
       // register the real height
       parameters.lineCount = outputArray.length / parameters.bytesPerLine
@@ -115,9 +113,9 @@ class FrameReader(val device: SaneDevice,
     new Frame(parameters, outputArray)
   }
 
-  override def toString: String = MoreObjects.toStringHelper(classOf[FrameReader]).add("isBigEndian", bigEndian).add("parameters", parameters).toString
+  override def toString = MoreObjects.toStringHelper(classOf[FrameReader]).add("isBigEndian", bigEndian).add("parameters", parameters).toString
 }
 
 object FrameReader {
-  private val log: Logger = Logger.getLogger(classOf[FrameReader].getName)
+  private val log = Logger.getLogger(classOf[FrameReader].getName)
 }

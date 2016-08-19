@@ -19,7 +19,7 @@ class SaneImage private(_frames: List[Frame],
                         val bytesPerLine: Int) {
   // this ensures that in the 3-frame situation, they are always
   // arranged in the following order: red, green, blue
-  private val frames: List[Frame] = {
+  private val frames = {
     val order = List(
       FrameType.RED,
       FrameType.GREEN,
@@ -33,7 +33,7 @@ class SaneImage private(_frames: List[Frame],
     _frames.sortBy(frame => ordinal(frame.`type`))
   }
 
-  private[jfreesane] def toBufferedImage: BufferedImage = {
+  private[jfreesane] def toBufferedImage = {
     val buffer: DataBuffer = asDataBuffer
 
     if (frames.size == redGreenBlueFrameTypes.size) {
@@ -98,7 +98,7 @@ class SaneImage private(_frames: List[Frame],
     throw new IllegalStateException("Unsupported SaneImage type")
   }
 
-  private def decodeSingleBitGrayscaleImage(buffer: DataBuffer): BufferedImage = {
+  private def decodeSingleBitGrayscaleImage(buffer: DataBuffer) = {
     val colorModel = new IndexColorModel(
       1,
       2,
@@ -112,7 +112,7 @@ class SaneImage private(_frames: List[Frame],
     new BufferedImage(colorModel, raster, false, null)
   }
 
-  private def decodeSingleBitColorImage: BufferedImage = {
+  private def decodeSingleBitColorImage = {
     val data: Array[Byte] = frames.head.data
     val image: BufferedImage = new BufferedImage(width, height, BufferedImage.TYPE_INT_RGB)
 
@@ -182,6 +182,7 @@ object SaneImage {
       Preconditions.checkArgument(!frameTypes.contains(frame.`type`), "Image already contains a frame of this type": Object)
       Preconditions.checkArgument(frameTypes.isEmpty || !singletonFrameTypes.contains(frame.`type`), "The frame type is singleton but this image " + "contains another frame": Object)
       Preconditions.checkArgument(frames.isEmpty || frames.head.data.length == frame.data.length, "new frame has an inconsistent size": Object)
+
       depthPerPixel = frame.pixelDepth
       bytesPerLine = frame.bytesPerLine
       width = frame.width

@@ -36,18 +36,17 @@ class SaneInputStream(val saneSession: SaneSession,
     readStatus match {
       case SaneStatus.STATUS_GOOD =>
         // now we're reading an array, decode the length of the array (which includes the null if the array is non-empty)
-        val length: Int = readWord.intValue - 1
+        val length = readWord.intValue - 1
         if (length > 0) {
-          val result: List[SaneDevice] =
-            (0 until length).map(_ =>
-              readSaneDevicePointer match {
+          val result =
+            (0 until length)
+              .map(_ => readSaneDevicePointer match {
                 case null =>
                   throw new IllegalStateException("null pointer encountered when not expected")
 
                 case device =>
                   device
-              }
-            ).toList
+              }).toList
 
           // read past a trailing byte in the response that I haven't figured out yet...
           readWord
@@ -81,26 +80,26 @@ class SaneInputStream(val saneSession: SaneSession,
     * Reads a single pointer and returns {@code true} if it was non-null.
     */
   @throws[IOException]
-  private def readPointer: Boolean = readWord.intValue != 0
+  private def readPointer = readWord.intValue != 0
 
   @throws[IOException]
-  private def readSaneDevice: SaneDevice = {
-    val deviceName: String = readString
-    val deviceVendor: String = readString
-    val deviceModel: String = readString
-    val deviceType: String = readString
+  private def readSaneDevice = {
+    val deviceName = readString
+    val deviceVendor = readString
+    val deviceModel = readString
+    val deviceType = readString
 
     new SaneDevice(this.saneSession, deviceName, deviceVendor, deviceModel, deviceType)
   }
 
   @throws[IOException]
-  def readString: String = {
+  def readString = {
     // read the length
-    val length: Int = readWord.intValue
+    val length = readWord.intValue
 
     if (length != 0) {
       // now read all the bytes
-      val input: Array[Byte] = new Array[Byte](length)
+      val input = new Array[Byte](length)
       if (ByteStreams.read(this, input, 0, length) != length)
         throw new IllegalStateException("truncated input while reading string")
 
@@ -111,7 +110,7 @@ class SaneInputStream(val saneSession: SaneSession,
   }
 
   @throws[IOException]
-  def readSaneParameters: SaneParameters = {
+  def readSaneParameters = {
     val frame = readWord.intValue
     val lastFrame = readWord.intValue == 1
     val bytesPerLine = readWord.intValue
@@ -123,35 +122,35 @@ class SaneInputStream(val saneSession: SaneSession,
   }
 
   @throws[IOException]
-  def readStatus: SaneStatus = SaneStatus.fromWireValue(readWord.intValue)
+  def readStatus = SaneStatus.fromWireValue(readWord.intValue)
 
   @throws[IOException]
-  def readWord: SaneWord = SaneWord.fromStream(this)
+  def readWord = SaneWord.fromStream(this)
 
   @throws[IOException]
-  def readOptionDescriptor: SaneOptionDescriptor = {
+  def readOptionDescriptor = {
     // discard pointer
     readWord
 
-    val optionName: String = readString
-    val optionTitle: String = readString
-    val optionDescription: String = readString
+    val optionName = readString
+    val optionTitle = readString
+    val optionDescription = readString
 
     // TODO: range check here
-    val valueType: OptionValueType = OptionValueType(readWord)
+    val valueType = OptionValueType(readWord)
 
     if (valueType == OptionValueType.GROUP)
     // a new group applies!
       currentGroup = Some(new OptionGroup(optionTitle))
 
     // TODO: range check here
-    val units: SaneOption.OptionUnits = SaneOption.OptionUnits(readWord)
+    val units = SaneOption.OptionUnits(readWord)
 
-    val size: Int = readWord.intValue
+    val size = readWord.intValue
 
     // constraint type
 
-    val capabilityWord: Int = readWord.intValue
+    val capabilityWord = readWord.intValue
 
     // TODO: range check here
     val constraintType = OptionValueConstraintType(readWord)
@@ -191,9 +190,9 @@ class SaneInputStream(val saneSession: SaneSession,
         // discard pointer to range
         readWord
 
-        val min: SaneWord = readWord
-        val max: SaneWord = readWord
-        val quantization: SaneWord = readWord
+        val min = readWord
+        val max = readWord
+        val quantization = readWord
 
         valueType match {
           case OptionValueType.INT | OptionValueType.FIXED =>
@@ -223,5 +222,5 @@ class SaneInputStream(val saneSession: SaneSession,
 }
 
 object SaneInputStream {
-  private val logger: Logger = Logger.getLogger(classOf[SaneInputStream].getName)
+  private val logger = Logger.getLogger(classOf[SaneInputStream].getName)
 }

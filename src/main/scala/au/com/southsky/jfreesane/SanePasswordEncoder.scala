@@ -22,10 +22,9 @@ import java.security.{MessageDigest, NoSuchAlgorithmException}
 object SanePasswordEncoder {
   private[jfreesane] val iso8859_1: Charset = Charset.forName("ISO-8859-1")
 
-  def encodedLatin1(charArray: Array[Char]): Array[Byte] =
-    iso8859_1.encode(CharBuffer.wrap(charArray)).array
+  def encodedLatin1(charArray: Array[Char]) = iso8859_1.encode(CharBuffer.wrap(charArray)).array
 
-  private def encodeAsHex(input: Array[Byte]): String =
+  private def encodeAsHex(input: Array[Byte]) =
     input.indices.map { i =>
       val hex = Integer.toHexString(0xff & input(i))
       if (hex.length == 1) s"0$hex" else hex

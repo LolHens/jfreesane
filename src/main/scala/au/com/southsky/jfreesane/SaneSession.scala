@@ -23,7 +23,7 @@ class SaneSession @throws[IOException] private(val socket: Socket) extends Close
     * will be supplied by {@link SanePasswordProvider#usingDotSanePassFile}, but
     * you may override that with {@link #setPasswordProvider}.
     */
-  def passwordProvider: SanePasswordProvider = _passwordProvider
+  def passwordProvider = _passwordProvider
 
   /**
     * Sets the {@link SanePasswordProvider password provider} to use if the SANE
@@ -41,7 +41,7 @@ class SaneSession @throws[IOException] private(val socket: Socket) extends Close
     * if an error occurs while communicating with the SANE daemon
     */
   @throws[IOException]
-  def device(name: String): SaneDevice = new SaneDevice(this, name, "", "", "")
+  def device(name: String) = new SaneDevice(this, name, "", "", "")
 
   /**
     * Lists the devices known to the SANE daemon.
@@ -65,7 +65,7 @@ class SaneSession @throws[IOException] private(val socket: Socket) extends Close
     * @throws IOException if an error occurred while closing the connection
     */
   @throws[IOException]
-  def close = try {
+  def close: Unit = try {
     outputStream.write(SaneRpcCode.SANE_NET_EXIT)
     outputStream.close
   } finally {
@@ -75,7 +75,7 @@ class SaneSession @throws[IOException] private(val socket: Socket) extends Close
 
   @throws[IOException]
   @throws[SaneException]
-  private[jfreesane] def openDevice(device: SaneDevice): SaneDeviceHandle = {
+  private[jfreesane] def openDevice(device: SaneDevice) = {
     outputStream.write(SaneRpcCode.SANE_NET_OPEN)
     outputStream.write(device.getName)
 
@@ -291,7 +291,6 @@ object SaneSession {
 
     val session: SaneSession = new SaneSession(socket)
     session.initSane
-
     session
   }
 }
