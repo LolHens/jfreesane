@@ -215,24 +215,14 @@ class SaneSessionTest {
   def acquireImageSucceedsAfterOutOfPaperCondition = {
     val device: SaneDevice = session.device("test")
     device.open
-    assertThat(device.option("source").stringConstraints: util.List[String]).has.item("Automatic Document Feeder")
+    assertThat(device.option("source").stringConstraints: util.List[String]).contains("Automatic Document Feeder")
     device.option("source").stringValue = "Automatic Document Feeder"
 
-    var thrown: Boolean = false
-    for (i <- 0 until 20)
-      try {
-        device.acquireImage
-      } catch {
-        case e: SaneException =>
-          if (e.status.orNull == SaneStatus.STATUS_NO_DOCS)
-          // out of documents to read, that's fine
-            thrown = true
-          else
-            throw e
-      }
+    expectedException.expect(classOf[SaneException])
+    expectedException.expectMessage("STATUS_NO_DOCS")
 
-    Truth2.assertThat(thrown).isTrue()
-    device.acquireImage
+    for (i <- 0 until 20)
+      device.acquireImage
   }
 
   @Test
