@@ -66,15 +66,17 @@ class SaneImage private(_frames: List[Frame],
         decodeSingleBitColorImage
 
     if (depthPerPixel == 8 || depthPerPixel == 16) {
-      var colorSpace: ColorSpace = null
+      val colorSpace = ColorSpace.getInstance(ColorSpace.CS_sRGB)
+
       var bandOffsets: Array[Int] = null
+      var scanlineStride: Int = 0
 
       if (frames.head.`type` == FrameType.GRAY) {
-        colorSpace = ColorSpace.getInstance(ColorSpace.CS_GRAY)
-        bandOffsets = Array(0)
+        bandOffsets = Array[Int](0, 0, 0)
+        scanlineStride = 1
       } else {
-        colorSpace = ColorSpace.getInstance(ColorSpace.CS_sRGB)
         bandOffsets = Array(0, 1, 2)
+        scanlineStride = 3
       }
 
       val raster: WritableRaster = Raster.createInterleavedRaster(
@@ -82,7 +84,7 @@ class SaneImage private(_frames: List[Frame],
         width,
         height,
         bytesPerLine * java.lang.Byte.SIZE / depthPerPixel,
-        bandOffsets.length,
+        scanlineStride,
         bandOffsets,
         new Point(0, 0)
       )
