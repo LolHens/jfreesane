@@ -21,7 +21,7 @@ import com.google.common.truth.Truth.assertThat
 import com.google.common.util.concurrent.SettableFuture
 import org.junit.Assert._
 import org.junit._
-import org.junit.rules.ExpectedException
+import org.junit.rules.{ExpectedException, TemporaryFolder}
 import org.junit.runner.RunWith
 import org.junit.runners.JUnit4
 
@@ -45,6 +45,8 @@ class SaneSessionTest {
   private var session: SaneSession = _
 
   def correctPasswordProvider = SanePasswordProvider.forUsernameAndPassword("testuser", "goodpass")
+
+  @Rule val tempFolder = new TemporaryFolder()
 
   @Rule val expectedException = ExpectedException.none()
 
@@ -111,7 +113,7 @@ class SaneSessionTest {
     try {
       device.open
       val image: BufferedImage = device.acquireImage
-      val file: File = File.createTempFile("image", ".png")
+      val file: File = File.createTempFile("image", ".png", tempFolder.getRoot)
       ImageIO.write(image, "png", file)
       System.out.println("Successfully wrote " + file)
     } finally {
@@ -236,7 +238,7 @@ class SaneSessionTest {
       assertEquals("Gray", modeOption.stringValue = "Gray")
       val image: BufferedImage = device.acquireImage
 
-      val file: File = File.createTempFile("mono-image", ".png")
+      val file: File = File.createTempFile("mono-image", ".png", tempFolder.getRoot)
       ImageIO.write(image, "png", file)
       System.out.println("Successfully wrote " + file)
     } finally {
@@ -516,7 +518,7 @@ class SaneSessionTest {
       assertEquals(true, device.option("three-pass").booleanValue = true)
 
       for (i <- 0 until 5) {
-        val file = File.createTempFile("three-pass", ".png")
+        val file = File.createTempFile("three-pass", ".png", tempFolder.getRoot)
         ImageIO.write(device.acquireImage, "png", file)
         System.out.println("Wrote three-pass test to " + file)
       }
@@ -577,16 +579,12 @@ class SaneSessionTest {
   @Test
   @throws[Exception]
   def passwordAuthenticationFromLocalFileSpecified = {
-    val passwordFile: File = File.createTempFile("sane", ".pass")
-    try {
-      Files.write("testuser:password:test", passwordFile, Charsets.ISO_8859_1)
-      session.passwordProvider = SanePasswordProvider.usingSanePassFile(passwordFile.getAbsolutePath)
-      val device: SaneDevice = session.device("test")
-      device.open
-      device.acquireImage
-    } finally {
-      passwordFile.delete
-    }
+    val passwordFile = tempFolder.newFile("sane.pass")
+    Files.write("testuser:goodpass:test", passwordFile, Charsets.ISO_8859_1)
+    session.passwordProvider = SanePasswordProvider.usingSanePassFile(passwordFile.getAbsolutePath)
+    val device = session.device("test")
+    device.open
+    device.acquireImage
   }
 
   @Test
@@ -641,7 +639,7 @@ class SaneSessionTest {
 
   @throws[IOException]
   private def writeImage(mode: String, sampleDepth: Int, testPicture: String, actualImage: BufferedImage) = {
-    val file: File = File.createTempFile(s"image-$mode-$sampleDepth-${testPicture.replace(' ', '_')}", ".png")
+    val file: File = File.createTempFile(s"image-$mode-$sampleDepth-${testPicture.replace(' ', '_')}", ".png", tempFolder.getRoot)
     ImageIO.write(actualImage, "png", file)
     System.out.println("Successfully wrote " + file)
   }
