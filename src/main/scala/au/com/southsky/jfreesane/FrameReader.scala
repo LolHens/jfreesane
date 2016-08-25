@@ -24,8 +24,8 @@ class FrameReader(val device: SaneDevice,
     @throws[IOException]
     @throws[SaneException]
     def readRecord(destination: OutputStream): Int = {
-      val inputStream: DataInputStream = new DataInputStream(underlyingStream)
-      val length: Int = inputStream.readInt
+      val inputStream = new DataInputStream(underlyingStream)
+      val length = inputStream.readInt
 
       if (length == 0xffffffff) {
         FrameReader.log.fine("Reached end of records")
@@ -58,16 +58,18 @@ class FrameReader(val device: SaneDevice,
 
     // For hand-held scanners where the line count is not known, report an image
     // size of -1 to the user.
-    val imageSizeBytes: Option[Int] =
-    if (parameters.lineCount == -1)
-      None
-    else
-      Some(parameters.bytesPerLine * parameters.lineCount)
+    val imageSizeBytes: Option[Int] = parameters.lineCount match {
+      case -1 =>
+        None
+
+      case lineCount =>
+        Some(parameters.bytesPerLine * lineCount)
+    }
 
     val bigArray = new ByteArrayOutputStream(imageSizeBytes.getOrElse(256))
 
-    var bytesRead: Int = 0
-    var totalBytesRead: Int = 0
+    var bytesRead = 0
+    var totalBytesRead = 0
 
     while ( {
       bytesRead = readRecord(bigArray)
@@ -97,8 +99,8 @@ class FrameReader(val device: SaneDevice,
       if (outputArray.length % 2 != 0)
         throw new IOException("expected a multiple of 2 frame length")
 
-      for (i <- 0 until outputArray.length by 2) {
-        val swap: Byte = outputArray(i)
+      for (i <- outputArray.indices by 2) {
+        val swap = outputArray(i)
         outputArray(i) = outputArray(i + 1)
         outputArray(i + 1) = swap
       }

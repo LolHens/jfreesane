@@ -72,11 +72,11 @@ class SaneClientAuthentication(val configurationSource: CharSource) extends Sane
     * Returns {@code true} if the configuration contains an entry for the given
     * resource.
     */
-  def canAuthenticate(resource: String): Boolean = {
-    if (resource != null) {
-      val credential: SaneClientAuthentication.ClientCredential = getCredentialForResource(resource)
-      credential != null
-    } else
+  def canAuthenticate(resource: String): Boolean = Option(resource) match {
+    case Some(resource) =>
+      getCredentialForResource(resource) != null
+
+    case None =>
       false
   }
 
