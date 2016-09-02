@@ -613,6 +613,14 @@ object SaneOption {
     def fromSession(session: SaneSession): SaneOption.ControlOptionResult = {
       val stream = session.inputStream
 
+      // Expected record format:
+      // SANE_Status status
+      // SANE_Word info
+      // SANE_Word value_type
+      // SANE_Word value_size
+      // void *value
+      // SANE_String *resource
+      // See http://sane-project.org/html/doc017.html#s5.2.6
       var status: SaneWord = stream.readWord
 
       if (status.intValue != 0)
