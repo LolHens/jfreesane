@@ -444,6 +444,8 @@ class SaneOption private[jfreesane](val device: SaneDevice,
   def isReadable: Boolean = descriptor.optionCapabilities.contains(OptionCapability.SOFT_DETECT)
 
   def isWriteable: Boolean = descriptor.optionCapabilities.contains(OptionCapability.SOFT_SELECT)
+
+  def isHardSelectable: Boolean = descriptor.optionCapabilities.contains(OptionCapability.HARD_SELECT)
 }
 
 object SaneOption {
@@ -584,7 +586,16 @@ object SaneOption {
           if (i > 0 && Strings.isNullOrEmpty(option.name)) {
             logger.fine(s"ignoring null or empty option with id $i: $option")
           } else
-            options = options :+ option
+            options = options ++ (option match {
+              case option if option.isWriteable && option.isHardSelectable =>
+                None // This option is invalid, it can't be both hardware and software selectable.
+              case option if option.isWriteable && !option.isReadable =>
+                None // Can't have a write-only option.
+              case option if !(option.isWriteable || option.isReadable || option.isHardSelectable) =>
+                None // Useless option, skip it.
+              case option =>
+                Some(option)
+            })
         }
       }
 
