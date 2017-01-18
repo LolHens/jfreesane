@@ -182,7 +182,7 @@ class SaneSessionTest {
     try {
       device.open
       val modeOption: SaneOption = device.option("mode")
-      assertThat(modeOption.stringValue = "Gray").isEqualTo("Gray")
+      assertThat((modeOption.stringValue = "Gray"): String).isEqualTo("Gray")
     } finally {
       device.close
     }
@@ -300,7 +300,7 @@ class SaneSessionTest {
     try {
       device.open
       assertThat(device.option("mode").stringValue(Charsets.US_ASCII)).matches("Gray|Color")
-      assertThat(device.option("mode").stringValue = "Gray").isEqualTo("Gray")
+      assertThat((device.option("mode").stringValue = "Gray"): String).isEqualTo("Gray")
       assertThat(device.option("mode").stringValue(Charsets.US_ASCII)).isEqualTo("Gray")
       assertThat(device.option("read-return-value").stringValue(Charsets.US_ASCII)).isEqualTo("Default")
     } finally {
@@ -353,7 +353,7 @@ class SaneSessionTest {
       val option: SaneOption = device.option("string-constraint-string-list")
       Truth2.assertThat(option).isNotNull
       Truth2.assertThat(option.constraintType).isEqualTo(OptionValueConstraintType.STRING_LIST_CONSTRAINT)
-      assertThat(option.stringConstraints: util.List[String]).has.exactly("First entry", "Second entry", "This is the very long third entry. Maybe the frontend has an idea how to display it")
+      assertThat(option.stringConstraints: util.List[String]).containsExactly("First entry", "Second entry", "This is the very long third entry. Maybe the frontend has an idea how to display it")
     } finally {
       device.close
     }

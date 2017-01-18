@@ -11,18 +11,25 @@ lazy val settings = Seq(
     Resolver.jcenterRepo
   ),
 
+  classpathTypes += "maven-plugin",
+
   libraryDependencies ++= Seq(
-    "org.scala-lang" % "scala-compiler" % "2.11.8",
-    "org.scala-lang" % "scala-reflect" % "2.11.8",
-    "com.typesafe.akka" %% "akka-actor" % "2.4.3",
-    "com.typesafe.akka" %% "akka-remote" % "2.4.3",
-    "com.chuusai" %% "shapeless" % "2.3.0",
-    "com.google.guava" % "guava" % "18.0",
-    "junit" % "junit" % "4.8.2",
-    "com.google.truth" % "truth" % "0.24"
+    "com.chuusai" %% "shapeless" % "2.3.2",
+    "com.github.mpilquist" %% "simulacrum" % "0.10.0",
+    "com.google.guava" % "guava" % "21.0",
+    "junit" % "junit" % "4.12",
+    "com.google.truth" % "truth" % "0.31"
   ),
 
+  addCompilerPlugin("org.scalamacros" % "paradise" % "2.1.0" cross CrossVersion.full),
+  addCompilerPlugin("org.spire-math" %% "kind-projector" % "0.9.3"),
+  //addCompilerPlugin("com.milessabin" % "si2712fix-plugin_2.11.8" % "1.2.0"),
+
+  fork in run := true,
+
   mainClass in Compile := Some(""),
+
+  dependencyUpdatesExclusions := moduleFilter(organization = "org.scala-lang"),
 
   scalacOptions ++= Seq("-Xmax-classfile-name", "254")
 )

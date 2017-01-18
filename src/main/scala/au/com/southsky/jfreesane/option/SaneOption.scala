@@ -394,7 +394,7 @@ class SaneOption private[jfreesane](val device: SaneDevice,
   private def writeOption(value: List[Int]): SaneOption.ControlOptionResult = {
     Preconditions.checkState(isActive, "option %s is not active", name)
     Preconditions.checkState(isWriteable, "option %s is not writeable", name)
-    Preconditions.checkState(valueType == OptionValueType.INT, "option %s is %s-typed, you must use the corresponding methods to set the value", name, valueType)
+    Preconditions.checkState(valueType == OptionValueType.INT, "option %s is %s-typed, you must use the corresponding methods to set the value", List(name, valueType): _*)
 
     val out: SaneOutputStream = device.session.outputStream
     out.write(SaneRpcCode.SANE_NET_CONTROL_OPTION)
