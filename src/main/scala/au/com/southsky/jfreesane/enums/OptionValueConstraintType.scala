@@ -20,18 +20,18 @@ object OptionValueConstraintType extends SaneEnumObject[OptionValueConstraintTyp
   /**
     * The option's value is constrained to some range of values.
     */
-  object RANGE_CONSTRAINT extends OptionValueConstraintType(1, "")
+  object RANGE_CONSTRAINT extends OptionValueConstraintType(1, "Range constraint")
 
   /**
     * The option's value is constrained to some list of values.
     */
-  object VALUE_LIST_CONSTRAINT extends OptionValueConstraintType(2, "")
+  object VALUE_LIST_CONSTRAINT extends OptionValueConstraintType(2, "Value list constraint")
 
   /**
     * The option's value type is {@link OptionValueType#STRING} and its value is constrained to some
     * list of string values.
     */
-  object STRING_LIST_CONSTRAINT extends OptionValueConstraintType(3, "")
+  object STRING_LIST_CONSTRAINT extends OptionValueConstraintType(3, "String list constraint")
 
   override def values: Set[OptionValueConstraintType] = Set(
     NO_CONSTRAINT,
