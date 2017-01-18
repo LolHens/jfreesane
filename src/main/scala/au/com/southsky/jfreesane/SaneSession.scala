@@ -3,12 +3,9 @@ package au.com.southsky.jfreesane
 import java.awt.image.BufferedImage
 import java.io.{BufferedInputStream, Closeable, IOException}
 import java.net.{InetAddress, InetSocketAddress, Socket}
-import java.util.concurrent.TimeUnit
-import java.util.logging.{Level, Logger}
 
 import au.com.southsky.jfreesane.device.{SaneDevice, SaneDeviceHandle}
 import au.com.southsky.jfreesane.enums.{FrameType, SaneRpcCode, SaneStatus}
-import com.google.common.base.Preconditions
 
 import scala.concurrent.duration._
 
@@ -264,9 +261,9 @@ class SaneSession @throws[IOException] private(val socket: Socket) extends Close
 }
 
 object SaneSession {
-  private val READ_BUFFER_SIZE: Int = 1 << 20
-  // 1mb
-  private val DEFAULT_PORT: Int = 6566
+  private val READ_BUFFER_SIZE: Int = 1 << 20 // 1mb
+
+  val defaultPort: Int = 6566
 
   /**
     * Establishes a connection to the SANE daemon running on the given host on the given port. If the
@@ -275,19 +272,20 @@ object SaneSession {
     */
   @throws[IOException]
   def apply(saneAddress: InetAddress,
-            port: Int = DEFAULT_PORT,
-            timeout: Duration = Duration.Zero): SaneSession = {
-
-    val millis: Long = timeout.toMillis
-    Preconditions.checkArgument(millis >= 0 && millis <= Integer.MAX_VALUE, "Timeout must be between 0 and Integer.MAX_VALUE milliseconds": Object)
-
-    // If the user specifies a non-zero timeout that rounds to 0 milliseconds, set the timeout to 1 millisecond instead.
-    if (Duration(millis, MILLISECONDS) != timeout)
-      Logger.getLogger(classOf[SaneSession].getName).log(Level.WARNING, "Specified timeout of {0} {1} rounds to 0ms and was clamped to 1ms", Array(timeout.toMillis, TimeUnit.MILLISECONDS))
+            port: Int = defaultPort,
+            timeout: Duration = Duration.Inf): SaneSession = {
+    val millis: Int = timeout match {
+      case _: Duration.Infinite => 0
+      case Duration.Undefined => 0
+      case finiteDuration: FiniteDuration => finiteDuration.toMillis match {
+        case 0 => 1
+        case millis => millis.toInt
+      }
+    }
 
     val socket: Socket = new Socket
     socket.setTcpNoDelay(true)
-    socket.connect(new InetSocketAddress(saneAddress, port), millis.toInt)
+    socket.connect(new InetSocketAddress(saneAddress, port), millis)
 
     val session: SaneSession = new SaneSession(socket)
     session.initSane

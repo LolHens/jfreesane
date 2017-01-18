@@ -63,7 +63,7 @@ class SaneSessionTest {
 
     val hostAndPort = HostAndPort.fromString(address)
 
-    session = SaneSession(InetAddress.getByName(hostAndPort.getHostText), hostAndPort.getPortOrDefault(6566));
+    session = SaneSession(InetAddress.getByName(hostAndPort.getHostText), hostAndPort.getPortOrDefault(6566))
     session.passwordProvider = correctPasswordProvider
   }
 
@@ -77,7 +77,7 @@ class SaneSessionTest {
     val devices: util.List[SaneDevice] = session.listDevices
     SaneSessionTest.log.info("Got " + devices.size + " device(s): " + devices)
     // Sadly the test device apparently does not show up in the device list.
-    // assertThat(devices).isNotEmpty();
+    // assertThat(devices).isNotEmpty()
   }
 
   @Test
@@ -261,32 +261,32 @@ class SaneSessionTest {
       device.option("br-y").fixedValue = 200
 
       /*
-       * assertProducesCorrectImage(device, "Gray", 1, "Solid white");
-       * assertProducesCorrectImage(device, "Gray", 8, "Solid white");
-       * assertProducesCorrectImage(device, "Gray", 16, "Solid white");
-       * assertProducesCorrectImage(device, "Gray", 1, "Solid black");
-       * assertProducesCorrectImage(device, "Gray", 8, "Solid black");
-       * assertProducesCorrectImage(device, "Gray", 16, "Solid black");
+       * assertProducesCorrectImage(device, "Gray", 1, "Solid white")
+       * assertProducesCorrectImage(device, "Gray", 8, "Solid white")
+       * assertProducesCorrectImage(device, "Gray", 16, "Solid white")
+       * assertProducesCorrectImage(device, "Gray", 1, "Solid black")
+       * assertProducesCorrectImage(device, "Gray", 8, "Solid black")
+       * assertProducesCorrectImage(device, "Gray", 16, "Solid black")
        *
-       * assertProducesCorrectImage(device, "Color", 1, "Solid white");
-       * assertProducesCorrectImage(device, "Color", 8, "Solid white");
-       * assertProducesCorrectImage(device, "Color", 16, "Solid white");
-       * assertProducesCorrectImage(device, "Color", 1, "Solid black");
-       * assertProducesCorrectImage(device, "Color", 8, "Solid black");
-       * assertProducesCorrectImage(device, "Color", 16, "Solid black");
+       * assertProducesCorrectImage(device, "Color", 1, "Solid white")
+       * assertProducesCorrectImage(device, "Color", 8, "Solid white")
+       * assertProducesCorrectImage(device, "Color", 16, "Solid white")
+       * assertProducesCorrectImage(device, "Color", 1, "Solid black")
+       * assertProducesCorrectImage(device, "Color", 8, "Solid black")
+       * assertProducesCorrectImage(device, "Color", 16, "Solid black")
        *
-       * assertProducesCorrectImage(device, "Gray", 1, "Color pattern");
-       * assertProducesCorrectImage(device, "Color", 1, "Color pattern");
+       * assertProducesCorrectImage(device, "Gray", 1, "Color pattern")
+       * assertProducesCorrectImage(device, "Color", 1, "Color pattern")
        *
-       * assertProducesCorrectImage(device, "Gray", 8, "Color pattern");
-       * assertProducesCorrectImage(device, "Color", 8, "Color pattern");
+       * assertProducesCorrectImage(device, "Gray", 8, "Color pattern")
+       * assertProducesCorrectImage(device, "Color", 8, "Color pattern")
        */
 
       assertProducesCorrectImage(device, "Gray", 1, "Grid")
       //      assertProducesCorrectImage(device, "Color", 1, "Color pattern")
 
-      assertProducesCorrectImage(device, "Color", 8, "Color pattern");
-      assertProducesCorrectImage(device, "Color", 16, "Color pattern");
+      assertProducesCorrectImage(device, "Color", 8, "Color pattern")
+      assertProducesCorrectImage(device, "Color", 16, "Color pattern")
     } finally {
       device.close
     }
@@ -671,7 +671,7 @@ class SaneSessionTest {
         val actualPixels = actualRaster.getPixel(x, y, null: Array[Int])
 
         // assert that all the samples are the same for the given pixel
-        Assert.assertArrayEquals(expectedPixels, actualPixels);
+        Assert.assertArrayEquals(expectedPixels, actualPixels)
       }
   }
 }
